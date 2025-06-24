@@ -1,4 +1,8 @@
 import React from 'react';
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "bootstrap/dist/css/bootstrap.min.css";
+
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 import Login from './components/Login';
@@ -7,6 +11,11 @@ import AdminDashboard from './components/AdminDashboard';
 import Profile from './components/Profile';
 import ListUser from './components/ListUser';
 import { AuthProvider, useAuth } from './context/AuthContext';
+const CategoryPage = lazy(() => import("./components/Category")); 
+const CategoryProducts = lazy(() => import("./components/CategoryProduct")); 
+const ProductDetails = lazy(() => import("./components/ProductDetails")); 
+const ProductLine = lazy(() => import("./components/ProductLine")); 
+// const Layout = lazy(() => import("./components/Layout"));
 import './App.css';
 
 const ProtectedRoute = ({ children, requireAdmin = false }) => {
@@ -65,6 +74,12 @@ function App() {
                                 }
                             />
                             <Route path="/" element={<Navigate to="/login" />} />
+                            <Route path="/Category" element={<CategoryPage />} />
+                            {/* <Route path="/Layout" element={<Layout />} /> */}
+                            <Route path="/category/:categoryId/products" element={<CategoryProducts />} /> {/* 👈 Add this line */}
+                            <Route path="/productline/:productLineId/products" element={<CategoryProducts />} /> {/* 👈 Add this line */}
+                            <Route path="/product/:productId" element={<ProductDetails />} /> 
+                            <Route path="/ProductLine" element={<ProductLine />} />
                         </Routes>
                     </div>
                 </Router>
