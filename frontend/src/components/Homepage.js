@@ -71,39 +71,39 @@ const styles = {
     color: '#1d4ed8'
   },
   pagination: {
-  marginTop: '30px',
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: '10px',
-  fontFamily: 'Segoe UI, sans-serif'
-},
-pageButton: {
-  padding: '8px 16px',
-  fontSize: '14px',
-  border: '1px solid #ccc',
-  borderRadius: '30px',
-  backgroundColor: '#f5f5f5',
-  color: '#333',
-  cursor: 'pointer',
-  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
-  transition: 'all 0.2s ease-in-out'
-},
-pageButtonHover: {
-  backgroundColor: '#e0e0e0'
-},
-pageButtonDisabled: {
-  backgroundColor: '#f0f0f0',
-  borderColor: '#e0e0e0',
-  color: '#aaa',
-  cursor: 'not-allowed',
-  boxShadow: 'none'
-},
-pageText: {
-  fontSize: '14px',
-  color: '#555',
-  fontWeight: '500'
-}
+    marginTop: '30px',
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: '10px',
+    fontFamily: 'Segoe UI, sans-serif'
+  },
+  pageButton: {
+    padding: '8px 16px',
+    fontSize: '14px',
+    border: '1px solid #ccc',
+    borderRadius: '30px',
+    backgroundColor: '#f5f5f5',
+    color: '#333',
+    cursor: 'pointer',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.05)',
+    transition: 'all 0.2s ease-in-out'
+  },
+  pageButtonHover: {
+    backgroundColor: '#e0e0e0'
+  },
+  pageButtonDisabled: {
+    backgroundColor: '#f0f0f0',
+    borderColor: '#e0e0e0',
+    color: '#aaa',
+    cursor: 'not-allowed',
+    boxShadow: 'none'
+  },
+  pageText: {
+    fontSize: '14px',
+    color: '#555',
+    fontWeight: '500'
+  }
 
 };
 
