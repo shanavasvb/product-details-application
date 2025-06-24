@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
@@ -7,67 +7,110 @@ const CategoryProducts = () => {
   const [products, setProducts] = useState([]);
   const [categoryName, setCategoryName] = useState('');
   const [productLineName, setproductLineName] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [hoveredCard, setHoveredCard] = useState(null);
 
   const navigate = useNavigate();
 
-             useEffect(() => {
-                if (categoryId) {
-                  axios.get(`http://localhost:5000/api/v1/category`)
-                    .then(res => {
-                      const found = res.data.find(cat => cat.Category_id === categoryId);
-                      if (found) setCategoryName(found.Category_name);
-                    });
+  // Memoized fetch functions to prevent unnecessary re-renders
+  const fetchCategoryData = useCallback(async (catId) => {
+    try {
+      setLoading(true);
+      setError(null);
 
-                  axios.get(`http://localhost:5000/api/v1/products/by-category/${categoryId}`)
-                    .then(res => setProducts(res.data))
-                    .catch(err => console.error('Category fetch error:', err));
-                } else if (productLineId) {
-                  axios.get(`http://localhost:5000/api/v1/productLine`)
-                    .then(res => {
-                      const found = res.data.find(pl => pl.ProductLine_id === productLineId);
-                      if (found) setproductLineName(found.ProductLine_name);
-                    });
+      // Fetch category name
+      const categoryResponse = await axios.get(`http://localhost:5000/api/v1/category`);
+      const foundCategory = categoryResponse.data.find(cat => cat.Category_id === catId);
+      if (foundCategory) {
+        setCategoryName(foundCategory.Category_name);
+      }
 
-                  axios.get(`http://localhost:5000/api/v1/products/by-productLine/${productLineId}`)
-                    .then(res => setProducts(res.data))
-                    .catch(err => console.error('ProductLine fetch error:', err));
-                }
-              }, [categoryId, productLineId]);
+      // Fetch products by category
+      const productsResponse = await axios.get(`http://localhost:5000/api/v1/products/by-category/${catId}`);
+      setProducts(productsResponse.data);
 
+    } catch (err) {
+      console.error('Category fetch error:', err);
+      setError('Failed to load category data');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchProductLineData = useCallback(async (plId) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch product line name
+      const productLineResponse = await axios.get(`http://localhost:5000/api/v1/productLine`);
+      const foundProductLine = productLineResponse.data.find(pl => pl.ProductLine_id === plId);
+      if (foundProductLine) {
+        setproductLineName(foundProductLine.ProductLine_name);
+      }
+
+      // Fetch products by product line
+      const productsResponse = await axios.get(`http://localhost:5000/api/v1/products/by-productLine/${plId}`);
+      setProducts(productsResponse.data);
+
+    } catch (err) {
+      console.error('ProductLine fetch error:', err);
+      setError('Failed to load product line data');
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (categoryId) {
+      fetchCategoryData(categoryId);
+    } else if (productLineId) {
+      fetchProductLineData(productLineId);
+    } else {
+      setLoading(false);
+    }
+  }, [categoryId, productLineId, fetchCategoryData, fetchProductLineData]);
 
   // Helper function to get product name from different possible fields
   const getProductName = (product) => {
-    return product.ProductName || 
-           'Product Name Not Available';
+    return product.ProductName || 'Product Name Not Available';
   };
 
   // Helper function to get description
   const getDescription = (product) => {
-    return product.Description || 
-           product.description || 
-           product.desc || 
-           'No description available';
+    return product.Description ||
+      product.description ||
+      product.desc ||
+      'No description available';
   };
 
   // Helper function to get unit
   const getUnit = (product) => {
-    return product.Unit || 
-           product.unit || 
-           product.units || 
-           'Unit not specified';
+    return product.Unit ||
+      product.unit ||
+      product.units ||
+      'Unit not specified';
   };
 
   // Helper function to get quantity
   const getQuantity = (product) => {
-    return product.Quantity || 
-           product.quantity || 
-           product.qty || 
-           'N/A';
+    return product.Quantity ||
+      product.quantity ||
+      product.qty ||
+      'N/A';
   };
+
+  const handleProductClick = useCallback((productId) => {
+    console.log("Navigating to product ID:", productId);
+    navigate(`/product/${productId}`);
+  }, [navigate]);
 
   const pageStyles = {
     minHeight: '100vh',
-    backgroundColor: ' #f8fafc',
+    backgroundColor: '#f8fafc',
     padding: '20px',
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
   };
@@ -98,7 +141,7 @@ const CategoryProducts = () => {
   const titleStyles = {
     fontSize: '2.5rem',
     fontWeight: '700',
-    color: ' #1e293b',
+    color: '#1e293b',
     marginBottom: '32px',
     textAlign: 'center',
     background: 'rgba(86, 86, 86, 0.71)',
@@ -123,7 +166,8 @@ const CategoryProducts = () => {
     border: '1px solid #e2e8f0',
     position: 'relative',
     overflow: 'hidden',
-    minHeight: '280px'
+    minHeight: '280px',
+    cursor: 'pointer'
   };
 
   const cardHoverStyles = {
@@ -198,28 +242,100 @@ const CategoryProducts = () => {
     margin: '40px 0'
   };
 
-  const [hoveredCard, setHoveredCard] = useState(null);
+  const loadingStyles = {
+    textAlign: 'center',
+    padding: '60px 20px',
+    color: '#64748b',
+    fontSize: '1.125rem'
+  };
+
+  const errorStyles = {
+    textAlign: 'center',
+    padding: '60px 20px',
+    color: '#dc2626',
+    fontSize: '1.125rem',
+    backgroundColor: '#fef2f2',
+    borderRadius: '12px',
+    border: '1px solid #fecaca',
+    margin: '40px 0'
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div style={pageStyles}>
+        <div style={containerStyles}>
+          <button
+            style={backButtonStyles}
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </button>
+          <div style={loadingStyles}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>⏳</div>
+            <p>Loading products...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div style={pageStyles}>
+        <div style={containerStyles}>
+          <button
+            style={backButtonStyles}
+            onClick={() => navigate(-1)}
+          >
+            ← Back
+          </button>
+          <div style={errorStyles}>
+            <div style={{ fontSize: '3rem', marginBottom: '16px' }}>❌</div>
+            <p>{error}</p>
+            <button
+              style={{
+                ...backButtonStyles,
+                marginTop: '16px',
+                backgroundColor: '#dc2626'
+              }}
+              onClick={() => {
+                if (categoryId) {
+                  fetchCategoryData(categoryId);
+                } else if (productLineId) {
+                  fetchProductLineData(productLineId);
+                }
+              }}
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={pageStyles}>
       <div style={containerStyles}>
-        <button 
+        <button
           style={backButtonStyles}
           onClick={() => navigate(-1)}
           onMouseEnter={(e) => {
-            e.target.style.backgroundColor = ' rgb(71, 166, 255)';
+            e.target.style.backgroundColor = 'rgb(71, 166, 255)';
             e.target.style.transform = 'translateY(-2px)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.backgroundColor = ' rgb(71, 166, 255)';
+            e.target.style.backgroundColor = 'rgb(71, 166, 255)';
             e.target.style.transform = 'translateY(0)';
           }}
         >
           ← Back
         </button>
-        
+
         <h2 style={titleStyles}>
-          Products in "{categoryName || productLineName ||'Category'}"
+          Products in "{categoryName || productLineName || 'Category'}"
         </h2>
 
         {products.length === 0 ? (
@@ -230,16 +346,13 @@ const CategoryProducts = () => {
         ) : (
           <div style={gridStyles}>
             {products.map((product, index) => (
-              <div 
-                key={product._id || product.id || index} 
+              <div
+                key={product._id || product.id || index}
                 style={{
                   ...cardStyles,
                   ...(hoveredCard === (product._id || index) ? cardHoverStyles : {})
                 }}
-                
-                onClick={() =>{
-                  console.log("Navigating to product ID:", product._id); 
-                  navigate(`/product/${product._id}`)}}
+                onClick={() => handleProductClick(product._id)}
                 onMouseEnter={() => setHoveredCard(product._id || index)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
@@ -251,18 +364,17 @@ const CategoryProducts = () => {
                   height: '4px',
                   background: 'linear-gradient(90deg,rgb(128, 203, 253), #8b5cf6,rgb(128, 203, 253))'
                 }}></div>
-                
+
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                   <h3 style={productNameStyles}>
-                    {/* <span style={labelStyles}>Name:</span> */}
                     {getProductName(product)}
                   </h3>
-                  
+
                   <p style={descriptionStyles}>
                     <span style={labelStyles}>Description:</span>
                     {getDescription(product)}
                   </p>
-                  
+
                   <div style={quantityUnitStyles}>
                     <span style={quantityBadgeStyles}>
                       Qty: {getQuantity(product)}
