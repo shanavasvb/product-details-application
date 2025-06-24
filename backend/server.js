@@ -25,6 +25,16 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/auth-app'
 // Create default admin
 const User = require('./models/User');
 const bcrypt = require('bcryptjs');
+// Routes
+const categoryRoutes = require('./routes/categoryRoutes');
+const productLineRoutes = require('./routes/productLine');
+const productRoutes = require('./routes/productRoutes');
+const enrichedProductRoute = require('./routes/enrichedProduct');
+app.use('/api/v1/productLine', productLineRoutes);
+app.use('/api/v1/enriched-products', enrichedProductRoute);
+app.use('/api/v1/category', categoryRoutes);
+app.use('/api/v1/products', productRoutes); // ✅ moved up
+
 
 const createDefaultAdmin = async () => {
     try {
