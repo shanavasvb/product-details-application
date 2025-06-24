@@ -160,6 +160,7 @@ backend/dist/
 # Cache
 .cache/
 *.cache
+frontend/node_modules/
 
 # Logs
 logs
