@@ -35,6 +35,7 @@ app.use('/api/v1/enriched-products', enrichedProductRoute);
 app.use('/api/v1/category', categoryRoutes);
 app.use('/api/v1/products', productRoutes); // ✅ moved up
 
+app.use('/api/v1/product', require('./routes/product'));
 
 const createDefaultAdmin = async () => {
     try {

@@ -4,17 +4,24 @@ const Product = require('../models/product');
 const Category = require('../models/category');
 const ProductLine = require('../models/productLine');
 const Brand = require('../models/brand');
-const ProductFeature = require('../models/features');
-const Specification = require('../models/specifications');
-
+const ProductFeature = require('../models/productFeatureSchema');
+const Specification = require('../models/specefication');
 
 const getFilters = async (req, res) => {
   try {
     const categories = await Category.find();
     const productLines = await ProductLine.find();
     const brands = await Brand.find();
+
+    console.log('Sending filters:', {
+      categories,
+      productLines,
+      brands
+    });
+
     res.json({ categories, productLines, brands });
   } catch (err) {
+    console.error('Error in getFilters:', err);
     res.status(500).json({ message: 'Error loading filters' });
   }
 };

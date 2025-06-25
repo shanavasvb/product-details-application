@@ -5,7 +5,7 @@ const categorySchema = new mongoose.Schema({
     Category_id: String,
     Category_name: String
 }, {
-  collection: 'category' // 👈 Match EXACTLY what MongoDB shows in Atlas
+  collection: 'category'
 });
 
 module.exports = mongoose.model('Category',categorySchema);
