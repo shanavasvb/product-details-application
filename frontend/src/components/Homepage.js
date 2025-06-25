@@ -123,18 +123,21 @@ function Homepage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchFilters = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/v1/products/filters');
-        setCategories(res.data.categories);
-        setProductLines(res.data.productLines);
-        setBrands(res.data.brands);
+  const fetchFilters = async () => {
+    try {
+        const res = await axios.get('http://localhost:5000/api/v1/product/filters');
+        console.log('Filter response:', res.data); // Add this
+
+        setCategories(res.data.categories || []);
+        setProductLines(res.data.productLines || []);
+        setBrands(res.data.brands || []);
       } catch (err) {
-        console.error('Error loading filters:', err);
+      console.error('Error loading filters:', err);
       }
     };
     fetchFilters();
   }, []);
+
 
   useEffect(() => {
     setPage(1);
@@ -144,7 +147,7 @@ function Homepage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await axios.get('http://localhost:5000/api/v1/products', {
+        const res = await axios.get('http://localhost:5000/api/v1/product', {
           params: {
             search: searchTerm,
             category: filterCategory,
