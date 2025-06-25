@@ -6,7 +6,7 @@ const productLineSchema = new mongoose.Schema({
   Category_id: String,
   ProductLine_name: String
 }, {
-  collection: 'productLines' // 👈 Use the exact collection name from MongoDB Atlas
+  collection: 'productLines' 
 });
 
 module.exports = mongoose.model('ProductLine', productLineSchema);
