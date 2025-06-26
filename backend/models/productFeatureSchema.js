@@ -1,4 +1,3 @@
-// productFeatureSchema.js schema
 const mongoose = require('mongoose');
 
 const productFeatureSchema = new mongoose.Schema({

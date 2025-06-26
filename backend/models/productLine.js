@@ -1,4 +1,3 @@
-// productLine.js
 const mongoose = require('mongoose');
 
 const productLineSchema = new mongoose.Schema({
