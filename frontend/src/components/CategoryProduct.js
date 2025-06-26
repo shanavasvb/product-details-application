@@ -377,11 +377,12 @@ const CategoryProducts = () => {
 
                   <div style={quantityUnitStyles}>
                     <span style={quantityBadgeStyles}>
-                      Qty: {getQuantity(product)}
+                      Qty: {getQuantity(product)} {getUnit(product)}
+
                     </span>
-                    <span style={unitBadgeStyles}>
+                    {/* <span style={unitBadgeStyles}>
                       {getUnit(product)}
-                    </span>
+                    </span> */}
                   </div>
                 </div>
               </div>

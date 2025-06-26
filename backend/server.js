@@ -33,7 +33,7 @@ const enrichedProductRoute = require('./routes/enrichedProduct');
 app.use('/api/v1/productLine', productLineRoutes);
 app.use('/api/v1/enriched-products', enrichedProductRoute);
 app.use('/api/v1/category', categoryRoutes);
-app.use('/api/v1/products', productRoutes); // ✅ moved up
+app.use('/api/v1/products', productRoutes);
 
 
 const createDefaultAdmin = async () => {

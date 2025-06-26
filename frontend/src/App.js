@@ -18,6 +18,7 @@ import ProductData from './components/ProductData'; // Fixed import name to matc
 // Lazy loaded components
 const CategoryPage = lazy(() => import("./components/Category"));
 const CategoryProducts = lazy(() => import("./components/CategoryProduct"));
+const ProductDetails = lazy(() => import("./components/ProductDetails")); 
 const ProductLine = lazy(() => import("./components/ProductLine"));
 
 // Loading component with better styling
@@ -269,6 +270,11 @@ function App() {
                                             </LazyWrapper>
                                         }
                                     />
+
+                                    <Route path="/product/:productId" element={
+                                         <LazyWrapper>
+                                            <ProductDetails />
+                                        </LazyWrapper>} /> 
 
                                     {/* Removed duplicate route for product details since we already have /homepage/:productId */}
 
