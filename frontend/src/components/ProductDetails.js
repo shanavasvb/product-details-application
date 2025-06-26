@@ -5,119 +5,339 @@ import axios from 'axios';
 const ProductDetails = () => {
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hoveredFeature, setHoveredFeature] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     axios
       .get(`http://localhost:5000/api/v1/enriched-products/${productId}`)
-      .then((res) => setProduct(res.data))
-      .catch((err) => console.error('Error fetching product:', err));
+      .then((res) => {
+        setProduct(res.data);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching product:', err);
+        setIsLoading(false);
+      });
   }, [productId]);
 
-  if (!product) {
+  if (isLoading) {
     return (
-      <div style={{ textAlign: 'center', padding: '3rem', fontSize: '1.25rem' }}>
-        Loading product...
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #ddd6fe 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: '64px',
+            height: '64px',
+            border: '4px solid #e2e8f0',
+            borderTop: '4px solid #3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            margin: '0 auto 24px'
+          }}></div>
+          <p style={{
+            fontSize: '20px',
+            fontWeight: '500',
+            color: '#64748b',
+            margin: 0
+          }}>Loading premium experience...</p>
+        </div>
       </div>
     );
   }
 
+  if (!product) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #ddd6fe 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <p style={{ fontSize: '20px', color: '#64748b' }}>Product not found</p>
+      </div>
+    );
+  }
+
+  const containerStyle = {
+    minHeight: '100vh',
+    // background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #ddd6fe 100%)',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+  };
+
+  const navStyle = {
+    position: 'sticky',
+    top: 0,
+    zIndex: 10,
+    background: 'rgba(255, 255, 255, 0.95)',
+    backdropFilter: 'blur(20px)',
+    borderBottom: '1px solid rgba(203, 213, 225, 0.3)',
+    padding: '20px 0'
+  };
+
+  const navContentStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '0 32px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '16px'
+  };
+
+  const backButtonStyle = {
+    background: 'rgb(24, 144, 255)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '12px',
+    padding: '12px 24px',
+    fontSize: '16px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px'
+  };
+
+  const mainContentStyle = {
+    maxWidth: '1200px',
+    margin: '0 auto',
+    padding: '40px 32px'
+  };
+
+  const heroSectionStyle = {
+    background: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: '24px',
+    padding: '38px',
+    marginBottom: '32px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)'
+  };
+
+  const productTitleStyle = {
+    fontSize: '35px',
+    fontWeight: '800',
+    background: 'rgb(24, 144, 255)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '24px',
+    lineHeight: '1.2',
+  fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
+
+  };
+
+  const featuresContainerStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '12px',
+    marginBottom: '32px'
+  };
+
+ const getFeatureStyle = (index) => ({
+  background: hoveredFeature === index
+    ? 'rgb(158, 219, 111)'
+    : '#f6ffed',
+  color: hoveredFeature === index ? 'white' : ' #389e0d',
+  fontSize: '13px',
+  fontWeight: '600',
+  padding: '5px 18px',
+  borderRadius: '50px',
+  border: '1px solid #b7eb8f',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
+  transform: hoveredFeature === index ? 'translateY(-2px)' : 'translateY(0)'
+});
+
+
+  const cardStyle = {
+    padding: '16px',
+    width: '40%',
+    background: '#fff',
+    borderRadius: '24px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)'
+  };
+
+  const specificationsCardStyle = {
+    padding: '16px',
+    width: '40%',
+    background: '#fff',
+    borderRadius: '24px',
+    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.1)',
+    backdropFilter: 'blur(10px)',
+    border: '1px solid rgba(255, 255, 255, 0.3)',
+  };
+
+  const titleStyle = {
+    fontSize: '19px',
+    // fontWeight: '700',
+    background: 'rgba(24, 143, 255, 0.85)',
+    fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '32px'
+  };
+
+  const labelStyle = {
+    // fontWeight: '500',
+    color: ' #4b5563',
+    minWidth: '120px',
+  fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
+
+  };
+
+  const valueStyle = {
+    color: 'rgba(75, 85, 99, 0.62)',
+    // fontWeight: '600',
+    fontSize: '14px'
+  };
+
+  const itemStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    padding: '8px 0',
+    borderBottom: '1px solid #f3f4f6'
+  };
+
+  const specTitleStyle = {
+    fontSize: '32px',
+    fontWeight: '700',
+    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    WebkitBackgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+    marginBottom: '32px'
+  };
+
+  const specListStyle = {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+    gap: '20px'
+  };
+
+  const specItemStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '16px 24px',
+    background: 'rgba(255, 255, 255, 0.6)',
+    borderRadius: '12px',
+    border: '1px solid rgba(203, 213, 225, 0.3)'
+  };
+
+  const specKeyStyle = {
+    fontWeight: '600',
+    color: '#374151',
+    fontSize: '16px'
+  };
+
+  const specValueStyle = {
+    color: '#6366f1',
+    fontWeight: '600',
+    fontSize: '16px'
+  };
+
   return (
-    <div style={{ padding: '30px 16px', fontFamily: 'sans-serif', background: '#f9fafb', minHeight: '100vh' }}>
-      <button
-        onClick={() => navigate(-1)}
-        style={{
-          background: ' rgb(71, 166, 255)',
-          color: 'white',
-          padding: '8px 16px',
-          border: 'none',
-          borderRadius: '6px',
-          marginBottom: '20px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-        }}
-      >
-        ← Back
-      </button>
+    <div style={containerStyle}>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
 
-      <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'rgb(85, 85, 87)', marginBottom: '12px' }}>
-        {product['Product Name']}
-      </h2>
+      {/* Navigation */}
+      <nav style={navStyle}>
+        <div style={navContentStyle}>
+          <button
+            onClick={() => navigate(-1)}
+            style={backButtonStyle}
+            className="back-button"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="m12 19-7-7 7-7" />
+              <path d="M19 12H5" />
+            </svg>
+            Back to Products
+          </button>
+        </div>
+      </nav>
 
-      {product.Features?.length > 0 && (
-  <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
-    {product.Features.map((feature, i) => (
-      <span key={i} style={pillStyle}>
-        {feature}
-      </span>
-    ))}
-  </div>
-)}
+      {/* Main Content */}
+      <main style={mainContentStyle}>
+        <section style={heroSectionStyle}>
+          <h1 style={productTitleStyle}>{product['Product Name']}</h1>
 
+           {/* Features */}
+          {product.Features?.length > 0 && (
+            <div style={featuresContainerStyle}>
+              {product.Features.map((feature, i) => (
+                <span
+                  key={i}
+                  style={getFeatureStyle(i)}
+                  onMouseEnter={() => setHoveredFeature(i)}
+                  onMouseLeave={() => setHoveredFeature(null)}
+                >
+                  {feature}
+                </span>
+              ))}
+            </div>
+          )}
 
-      <div style={infoStyle}>
-        <strong>Description:</strong> {product.Description || 'N/A'}
-      </div>
-      <div style={infoStyle}>
-        <strong>Barcode:</strong> {product.Barcode || 'N/A'}
-      </div>
-      <div style={infoStyle}>
-        <strong>Brand:</strong> {product.Brand || 'N/A'}
-      </div>
-      <div style={infoStyle}>
-        <strong>Category:</strong> {product.Category || 'N/A'}
-      </div>
-      <div style={infoStyle}>
-        <strong>Product Line:</strong> {product.ProductLine || 'N/A'}
-      </div>
-      <div style={infoStyle}>
-        <strong>Quantity:</strong> {product.Quantity || 'N/A'}
-      </div>
+          {product.Description && (
+            <p style={{
+              fontSize: '16px',
+              color: '#64748b',
+              lineHeight: '1.6',
+              marginBottom: '32px',
+              maxWidth: '800px',
+              fontFamily: `-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'`,
 
-      {/* <div style={infoStyle}>
-        <strong>Features:</strong>
-        {product.Features?.length ? (
-          <ul style={{ marginTop: '6px', paddingLeft: '20px' }}>
-            {product.Features.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
-          </ul>
-        ) : (
-          <p style={{ color: '#6b7280' }}>No features available.</p>
-        )}
-      </div> */}
+            }}>{product.Description}</p>
+          )}
 
-      <div style={infoStyle}>
-        <strong>Specifications:</strong>
-        {product.Specification ? (
-          <ul style={{ marginTop: '6px', paddingLeft: '20px' }}>
-            {Object.entries(product.Specification).map(([k, v], i) => (
-              <li key={i}>
-                <strong>{k}:</strong> {v}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p style={{ color: '#6b7280' }}>No specifications available.</p>
-        )}
-      </div>
+         
+
+          {/* Side-by-side Product Info and Specifications */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '44px' }}>
+            <div style={cardStyle}>
+              <div style={titleStyle}>Product Information</div>
+              {<div style={itemStyle}><span style={labelStyle}>Brand</span><span style={valueStyle}>{product.Brand}</span></div>}
+              {<div style={itemStyle}><span style={labelStyle}>Category</span><span style={valueStyle}>{product.Category}</span></div>}
+              {<div style={itemStyle}><span style={labelStyle}>Product Line</span><span style={valueStyle}>{product.ProductLine}</span></div>}
+              {<div style={itemStyle}><span style={labelStyle}>Barcode</span><span style={valueStyle}>{product.Barcode}</span></div>}
+              {<div style={itemStyle}><span style={labelStyle}>Quantity</span><span style={valueStyle}>{product.Quantity}</span></div>}
+            </div>
+
+            {product.Specification && Object.keys(product.Specification).length > 0 && (
+              <section style={specificationsCardStyle}>
+                <div style={titleStyle}>Technical Specifications</div>
+                <div style={specListStyle}>
+                  {Object.entries(product.Specification).map(([key, value], index) => (
+                    <div key={index} style={itemStyle} className="spec-item">
+                      <span style={labelStyle}>{key}</span>
+                      <span style={valueStyle}>{value}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        </section>
+      </main>
     </div>
   );
-};
-
-const pillStyle = {
-  background: '#e0f2fe',
-  color: '#0369a1',
-  fontSize: '12px',
-  fontWeight: '600',
-  padding: '4px 12px',
-  borderRadius: '999px'
-};
-
-const infoStyle = {
-  marginBottom: '16px',
-  fontSize: '15px',
-  color: '#374151'
 };
 
 export default ProductDetails;
