@@ -18,7 +18,7 @@ const Login = () => {
     if (result.success) {
       message.success('Login successful!');
       const userData = JSON.parse(localStorage.getItem('user'));
-      navigate(userData.is_admin ? '/admin' : '/profile');
+      navigate(userData.is_admin ? '/admin' : '/homepage');
     } else {
       message.error(result.message);
     }
