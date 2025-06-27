@@ -4,10 +4,27 @@ import { FaEdit, FaTrash, FaSave } from 'react-icons/fa';
 import axios from 'axios';
 
 function ProductData() {
+  
   const { productId } = useParams();
   const [product, setProduct] = useState(null);
   const [editedProduct, setEditedProduct] = useState({});
   const [isEditing, setIsEditing] = useState(false);
+  const [categorySuggestions, setCategorySuggestions] = useState([]);
+  const [productLineSuggestions, setProductLineSuggestions] = useState([]);
+  const [brandSuggestions, setBrandSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState({
+    Category: false,
+    ProductLine: false,
+    Brand: false
+  });
+
+  // Get user admin status from localStorage (matches your login implementation)
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const userData = JSON.parse(localStorage.getItem('user') || '{}');
+    setIsAdmin(userData.is_admin || false);
+  }, []);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -23,19 +40,88 @@ function ProductData() {
   }, [productId]);
 
   const handleEditClick = () => setIsEditing(true);
-
   const handleSaveClick = () => {
     setProduct(editedProduct);
     setIsEditing(false);
     alert('Save action triggered (no backend update)');
   };
-
   const handleDeleteClick = () => alert('Delete action triggered');
 
+  const fetchSuggestions = (field, value) => {
+    if (!value) return;
+    const endpoint = {
+      Category: '/api/v1/categories/search',
+      ProductLine: '/api/v1/productLines/search',
+      Brand: '/api/v1/brands/search'
+    }[field];
+
+    axios.get(`${endpoint}?q=${value}`).then(res => {
+      if (field === 'Category') setCategorySuggestions(res.data);
+      if (field === 'ProductLine') setProductLineSuggestions(res.data);
+      if (field === 'Brand') setBrandSuggestions(res.data);
+    });
+  };
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      if (isEditing) fetchSuggestions('Category', editedProduct.Category);
+    }, 300);
+    return () => clearTimeout(delay);
+  }, [editedProduct.Category]);
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      if (isEditing) fetchSuggestions('ProductLine', editedProduct.ProductLine);
+    }, 300);
+    return () => clearTimeout(delay);
+  }, [editedProduct.ProductLine]);
+
+  useEffect(() => {
+    const delay = setTimeout(() => {
+      if (isEditing) fetchSuggestions('Brand', editedProduct.Brand);
+    }, 300);
+    return () => clearTimeout(delay);
+  }, [editedProduct.Brand]);
+
+  const renderInputWithSuggestions = (field, value, suggestions, setValue, keyName) => (
+    <div style={{ position: 'relative' }}>
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => {
+        setValue(e.target.value);
+        setShowSuggestions(prev => ({ ...prev, [field]: true }));
+      }}
+      onBlur={() => setTimeout(() => setShowSuggestions(prev => ({ ...prev, [field]: false })), 200)}
+      style={styles.input}
+    />
+    {showSuggestions[field] && (
+      <div style={styles.suggestionBox}>
+        {suggestions.length === 0 ? (
+          <div style={styles.noSuggestions}>No matches found</div>
+        ) : (
+          suggestions.map((item, index) => (
+            <div
+              key={index}
+              style={styles.suggestionItem}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = styles.suggestionItemHover.backgroundColor}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+              onMouseDown={() => {
+                setEditedProduct(prev => ({ ...prev, [field]: item[keyName] }));
+                setShowSuggestions(prev => ({ ...prev, [field]: false }));
+              }}
+            >
+              {item[keyName]}
+            </div>
+          ))
+        )}
+      </div>
+    )}
+  </div>
+  );
+
   if (!product) {
-    return <div style={styles.loadingContainer}>
-      <p style={styles.loadingText}>Loading product details...</p>
-    </div>;
+    return <div style={styles.loadingContainer}><p style={styles.loadingText}>Loading product details...</p></div>;
   }
 
   return (
@@ -43,62 +129,60 @@ function ProductData() {
       <div style={styles.header}>
         <h1 style={styles.productName}>{product.ProductName}</h1>
         <div style={styles.headerActions}>
-          <button 
-            onClick={isEditing ? handleSaveClick : handleEditClick} 
-            style={styles.actionButton}
-            title={isEditing ? "Save Changes" : "Edit Product"}
-          >
+          <button onClick={isEditing ? handleSaveClick : handleEditClick} style={styles.actionButton}>
             {isEditing ? <FaSave /> : <FaEdit />}
-            <span style={styles.actionButtonText}>
-              {isEditing ? "Save" : "Edit"}
-            </span>
+            <span style={styles.actionButtonText}>{isEditing ? "Save" : "Edit"}</span>
           </button>
         </div>
       </div>
 
       <div style={styles.card}>
         <div style={styles.productInfo}>
-          {/* Basic details set  */}
           <div style={styles.section}>
-            {/* <h2 style={styles.sectionTitle}>Basic Information</h2> */}
             <div style={styles.detailsGrid}>
+              {/* Category */}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Category</label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedProduct.Category}
-                    onChange={(e) => setEditedProduct({ ...editedProduct, Category: e.target.value })}
-                    style={styles.input}
-                  />
+                  renderInputWithSuggestions(
+                    'Category',
+                    editedProduct.Category,
+                    categorySuggestions,
+                    (val) => setEditedProduct(prev => ({ ...prev, Category: val })),
+                    'Category_name'
+                  )
                 ) : (
                   <p style={styles.value}>{product.Category}</p>
                 )}
               </div>
 
+              {/* Product Line */}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Product Line</label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedProduct.ProductLine}
-                    onChange={(e) => setEditedProduct({ ...editedProduct, ProductLine: e.target.value })}
-                    style={styles.input}
-                  />
+                  renderInputWithSuggestions(
+                    'ProductLine',
+                    editedProduct.ProductLine,
+                    productLineSuggestions,
+                    (val) => setEditedProduct(prev => ({ ...prev, ProductLine: val })),
+                    'ProductLine_name'
+                  )
                 ) : (
                   <p style={styles.value}>{product.ProductLine}</p>
                 )}
               </div>
 
+              {/* Brand */}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Brand</label>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedProduct.Brand}
-                    onChange={(e) => setEditedProduct({ ...editedProduct, Brand: e.target.value })}
-                    style={styles.input}
-                  />
+                  renderInputWithSuggestions(
+                    'Brand',
+                    editedProduct.Brand,
+                    brandSuggestions,
+                    (val) => setEditedProduct(prev => ({ ...prev, Brand: val })),
+                    'Brand_name'
+                  )
                 ) : (
                   <p style={styles.value}>{product.Brand}</p>
                 )}
@@ -142,11 +226,10 @@ function ProductData() {
               </div>
             </div>
           </div>
-
-          {/* Description set*/}
-          <div style={styles.section}>
-            <h2 style={styles.sectionTitle}>Description</h2>
-            {isEditing ? (
+        {/* Description set*/}
+           <div style={styles.section}>
+             <h2 style={styles.sectionTitle}>Description</h2>
+             {isEditing ? (
               <textarea
                 value={editedProduct.Description}
                 onChange={(e) => setEditedProduct({ ...editedProduct, Description: e.target.value })}
@@ -217,12 +300,15 @@ function ProductData() {
           )}
         </div>
 
-        <div style={styles.actions}>
-          <button onClick={handleDeleteClick} style={styles.deleteButton}>
-            <FaTrash style={styles.buttonIcon} />
-            <span style={styles.buttonText}>Delete Product</span>
-          </button>
-        </div>
+        {/* Only show delete button if user is admin */}
+        {isAdmin && (
+          <div style={styles.actions}>
+            <button onClick={handleDeleteClick} style={styles.deleteButton}>
+              <FaTrash style={styles.buttonIcon} />
+              <span style={styles.buttonText}>Delete Product</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -481,6 +567,36 @@ const styles = {
   },
   buttonText: {
     marginLeft: '0.3rem'
+  },
+  suggestionBox: {
+    position: 'absolute',
+    top: '100%',
+    left: 0,
+    right: 0,
+    backgroundColor: '#ffffff',
+    border: '1px solid #ccc',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+    borderRadius: '4px',
+    zIndex: 1000,
+    maxHeight: '180px',
+    overflowY: 'auto',
+    marginTop: '4px',
+  },
+  suggestionItem: {
+    padding: '10px 14px',
+    fontSize: '0.95rem',
+    color: '#333',
+    cursor: 'pointer',
+    transition: 'background-color 0.2s ease',
+    borderBottom: '1px solid #f1f1f1'
+  },
+  suggestionItemHover: {
+    backgroundColor: '#eef6ff'
+  },
+  noSuggestions: {
+    padding: '10px 14px',
+    fontSize: '0.9rem',
+    color: '#888'
   }
 };
 
