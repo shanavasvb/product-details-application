@@ -36,6 +36,10 @@ app.use('/api/v1/category', categoryRoutes);
 app.use('/api/v1/products', productRoutes); // ✅ moved up
 
 app.use('/api/v1/product', require('./routes/product'));
+app.use('/api/v1/categories', require('./routes/category'));
+app.use('/api/v1/productLines', require('./routes/productLineRoute'));
+app.use('/api/v1/brands', require('./routes/brand'));
+app.use('/api/v1/approvalNotify',require('./routes/approvalNotify'));
 
 const createDefaultAdmin = async () => {
     try {
