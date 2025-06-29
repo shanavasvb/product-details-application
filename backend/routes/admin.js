@@ -23,4 +23,30 @@ router.get('/list-user',adminAuth,async (req,res) => {
         })
     }
 })
+
+router.delete('/delete-user/:userId',adminAuth,async(req,res)=>{
+try {
+    const deleteuser = await User.findById(req.params.userId)
+    if (!deleteuser) {
+        return res.status(404).json({
+            success: false,
+            message: 'User not found'
+        })
+    }
+    await User.findByIdAndDelete(req.params.userId)
+    res.json({
+        success: true,
+        message: 'User deleted successfully'
+    })
+}
+
+catch (error) {
+    res.status(500).json({
+        success: false,
+        message: error.message
+    })
+}
+})
+
+
 module.exports = router
