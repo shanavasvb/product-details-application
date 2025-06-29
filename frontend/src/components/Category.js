@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Grid, List,Plus, Package, Search, ChevronRight, Edit3, Check, X } from 'lucide-react';
+
 const Category = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [products, setProducts] = useState([]);
@@ -15,8 +16,10 @@ const Category = () => {
   const [editingCategory, setEditingCategory] = useState(null);
   const [editingValue, setEditingValue] = useState('');
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isAdmin = user?.is_admin;
 
-  // Inline styles
+
   const styles = {
     mainContainer: {
       minHeight: '100vh',
@@ -40,21 +43,18 @@ const Category = () => {
       justifyContent: window.innerWidth >= 1024 ? 'space-between' : 'flex-start',
       // gap: '1rem'
     },
-    title: {
-      fontSize: '2.25rem',
-      fontWeight: 'bold',
-      width: '100%',
-      // background: 'linear-gradient( #1890ff)',
-      background: ' #1890ff',
-      // background: ' rgba(86, 86, 86, 0.71)',
-      
-      // background: 'linear-gradient(to right, rgb(79, 70, 229), rgb(147, 51, 234))',
-      WebkitBackgroundClip: 'text',
-      color: 'transparent',
-      marginBottom: '0.25rem',
-      marginTop: '1.25rem',
-      marginLeft: '25%'
-    },
+    title: (isAdmin) => ({
+    fontSize: '2.25rem',
+    fontWeight: 'bold',
+    width: '108%',
+    background: isAdmin ? ' linear-gradient(to right, rgb(79, 70, 229), rgb(147, 51, 234))' : ' #1890ff', 
+    WebkitBackgroundClip: 'text',
+    color: 'transparent',
+    marginBottom: '0.25rem',
+    marginTop: '1.25rem',
+    marginLeft: '25%'
+  }),
+
     subtitle: {
       width: '100%',
       color: 'rgb(75, 85, 99)',
@@ -99,29 +99,33 @@ const Category = () => {
       gap: '0.5rem',
       marginRight: '3%'
     },
-    viewButton: (isActive) => ({
+    viewButton: (isActive, isAdmin) => ({
       padding: '0.5rem',
       borderRadius: '0.75rem',
       border: 'none',
       cursor: 'pointer',
       transition: 'all 0.3s ease',
       backdropFilter: 'blur(4px)',
-      backgroundColor: isActive ? '#1890ff' : 'rgba(255, 255, 255, 0.5)',
-      // backgroundColor: isActive ? 'rgb(99, 102, 241)' : 'rgba(255, 255, 255, 0.5)',
+      background: isActive
+        ? isAdmin
+          ? 'linear-gradient(to right, rgb(79, 70, 229), rgb(147, 51, 234))'
+          : '#1890ff'
+        : 'rgba(255, 255, 255, 0.5)',
       color: isActive ? 'white' : 'rgb(75, 85, 99)',
       boxShadow: isActive ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none'
     }),
+
+
      categoriesGrid: {
     display: 'grid',
     gap: '1.5rem',
     padding: '2%',
     paddingBottom: '2rem',
     gridTemplateColumns: viewMode === 'grid' 
-      ? 'repeat(auto-fit, minmax(300px, 1fr))' // Changed from repeat(3, 1fr)
+      ? 'repeat(auto-fit, minmax(300px, 1fr))' 
       : '1fr',
     maxWidth: viewMode === 'list' ? '56rem' : 'none',
     margin: viewMode === 'list' ? '0 auto' : '0',
-    // Add responsive behavior
     '@media (max-width: 1200px)': {
       gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fit, minmax(280px, 1fr))' : '1fr'
     },
@@ -189,15 +193,15 @@ const Category = () => {
       flex: 1,
       minWidth: 0
     },
-    categoryIconContainer: {
-      background: ' #1890ff',
-      // background: 'linear-gradient(to bottom right, #1890ff, rgb(147, 51, 234))',
+    categoryIconContainer: (isAdmin) => ({
+      background: isAdmin ? 'linear-gradient(to right, rgb(79, 70, 229), rgb(147, 51, 234))' : ' #1890ff', 
       boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
       transition: 'box-shadow 0.3s ease',
       padding: viewMode === 'grid' ? '0.75rem' : '0.5rem',
       borderRadius: viewMode === 'grid' ? '1rem' : '0.75rem',
       marginBottom: viewMode === 'grid' ? '1rem' : '0'
-    },
+    }),
+
     categoryIcon: {
       width: viewMode === 'grid' ? '2rem' : '1.25rem',
       height: viewMode === 'grid' ? '2rem' : '1.25rem',
@@ -414,28 +418,32 @@ const Category = () => {
       <header style={styles.header}>
         <div style={styles.headerContent}>
           <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '2%' }}>
-                      <h1 style={styles.title}>Categories</h1>
-                      <button
-                        onClick={() => setIsAdding(true)}
-                        title="Add Category"
-                        style={{
-                          padding: '6px',
-                          background: ' #1890ff',
-                          borderRadius: '0.5rem',
-                          border: 'none',
-                          marginTop: '20px',
-                          cursor: 'pointer',
-                          color: 'white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginBottom:'-9%'
-                        }}
-                      >
-                        <Plus size={20} />
-                      </button>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '2%' }}>
+                      {/* <h1 style={styles.title}>Categories</h1> */}
+                      <h1 style={styles.title(isAdmin)}>Categories</h1>
+                      {isAdmin && (
+                        <button
+                          onClick={() => setIsAdding(true)}
+                          title="Add Category"
+                          style={{
+                            padding: '6px',
+                            background: ' linear-gradient(to right, rgba(78, 70, 229, 0.84), rgba(146, 51, 234, 0.9))',
+                            borderRadius: '0.5rem',
+                            border: 'none',
+                            marginTop: '20px',
+                            cursor: 'pointer',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom:'-9%'
+                          }}
+                        >
+                          <Plus size={20} />
+                        </button>
+                      )}
                     </div>
+
 
             <p style={styles.subtitle}>
               <Package style={{ width: '1rem', height: '1rem' }} />
@@ -469,7 +477,7 @@ const Category = () => {
               />
             </div>
 
-            <div style={styles.viewButtons}>
+            {/* <div style={styles.viewButtons}>
               <button
                 style={styles.viewButton(viewMode === 'grid')}
                 onClick={() => setViewMode('grid')}
@@ -482,7 +490,22 @@ const Category = () => {
               >
                 <List />
               </button>
+            </div> */}
+            <div style={styles.viewButtons}>
+              <button
+                style={styles.viewButton(viewMode === 'grid', isAdmin)}
+                onClick={() => setViewMode('grid')}
+              >
+                <Grid />
+              </button>
+              <button
+                style={styles.viewButton(viewMode === 'list', isAdmin)}
+                onClick={() => setViewMode('list')}
+              >
+                <List />
+              </button>
             </div>
+
           </div>
         </div>
       </header>
@@ -520,7 +543,7 @@ const Category = () => {
               }}
 
           style={{
-            backgroundColor: '#10b981',
+            backgroundColor: ' #10b981',
           //  background: ' #1890ff',
             border: 'none',
             color: 'white',
@@ -579,8 +602,10 @@ const Category = () => {
                   <div style={styles.cardContent}>
                     {viewMode === 'grid' ? (
                       <>
-                        <div style={styles.categoryIconContainer}>
+                        {/* <div style={styles.categoryIconContainer}> */}
+                        <div style={styles.categoryIconContainer(isAdmin)}>
                           <Package style={styles.categoryIcon} />
+
                         </div>
                         
                         <div style={styles.categoryNameSection}>
@@ -668,8 +693,10 @@ const Category = () => {
                     ) : (
                       <>
                         <div style={styles.listItemLeft}>
-                          <div style={styles.categoryIconContainer}>
+                          {/* <div style={styles.categoryIconContainer}> */}
+                          <div style={styles.categoryIconContainer(isAdmin)}>
                             <Package style={styles.categoryIcon} />
+
                           </div>
                           <div style={styles.listItemContent}>
                             <div style={styles.categoryNameSection}>

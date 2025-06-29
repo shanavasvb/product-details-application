@@ -9,6 +9,8 @@ import AdminDashboard from './components/AdminDashboard';
 import Profile from './components/Profile';
 import ListUser from './components/ListUser';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import RoleBasedLayoutRoute from './components/RoleBasedLayoutRoute';
+
 
 
 // Import pages
@@ -19,6 +21,8 @@ import ProductData from './components/ProductData'; // Fixed import name to matc
 const CategoryPage = lazy(() => import("./components/Category"));
 const CategoryProducts = lazy(() => import("./components/CategoryProduct"));
 const ProductLine = lazy(() => import("./components/ProductLine"));
+const ProductDetails = lazy(() => import("./components/ProductDetails")); 
+const ProductFetch = lazy(() => import("./components/ProductFetch")); 
 
 // Loading component with better styling
 const LoadingSpinner = () => (
@@ -204,7 +208,18 @@ function App() {
                             <Suspense fallback={<LoadingSpinner />}>
                                 <Routes>
                                     {/* Layout routes - public homepage section */}
-                                    <Route path="/homepage" element={<Homepage />} />
+                                    {/* <Route path="/homepage" element={<Homepage />} /> */}
+                                    <Route
+                                        path="/homepage"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <Homepage />
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+
                                     <Route path="/homepage/:productId" element={<ProductData />} />
 
                                     {/* Auth routes */}
@@ -212,45 +227,95 @@ function App() {
                                     <Route path="/register" element={<Register />} />
 
                                     {/* Protected routes */}
-                                    <Route
+                                    {/* <Route
                                         path="/admin"
                                         element={
                                             <ProtectedRoute requireAdmin={true}>
                                                 <AdminDashboard />
                                             </ProtectedRoute>
                                         }
-                                    />
-
+                                    /> */}
                                     <Route
+                                        path="/admin"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <AdminDashboard/>
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                        />
+
+
+
+                                    {/* <Route
                                         path='/list-user'
                                         element={
                                             <ProtectedRoute>
                                                 <ListUser />
                                             </ProtectedRoute>
                                         }
-                                    />
-
+                                    /> */}
                                     <Route
+                                        path="/list-user"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <ListUser/>
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                        />
+
+                                    {/* <Route
                                         path="/profile"
                                         element={
                                             <ProtectedRoute>
                                                 <Profile />
                                             </ProtectedRoute>
                                         }
-                                    />
+                                    /> */}
+                                     <Route
+                                        path="/profile"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <Profile />
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                        />
 
                                     {/* Default route */}
                                     <Route path="/" element={<Navigate to="/login" replace />} />
 
                                     {/* Lazy-loaded routes */}
-                                    <Route
+                                    {/* <Route
                                         path="/Category"
                                         element={
                                             <LazyWrapper>
                                                 <CategoryPage />
                                             </LazyWrapper>
                                         }
-                                    />
+                                    /> */}
+                                    <Route
+                                        path="/Category"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <CategoryPage />
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                        />
 
                                     <Route
                                         path="/category/:categoryId/products"
@@ -269,18 +334,43 @@ function App() {
                                             </LazyWrapper>
                                         }
                                     />
+                                    <Route path="/product/:productId" element={<ProductDetails />} /> 
+                                    
+                                    <Route
+                                        path="/product-fetch"
+                                        element={
+                                            <LazyWrapper>
+                                            <ProductFetch />
+                                            </LazyWrapper>
+                                        }
+                                        />
+
+
 
                                     {/* Removed duplicate route for product details since we already have /homepage/:productId */}
 
-                                    <Route
+                                    {/* <Route
                                         path="/ProductLine"
                                         element={
                                             <LazyWrapper>
                                                 <ProductLine />
                                             </LazyWrapper>
                                         }
-                                    />
-                                </Routes>
+                                    /> */}
+
+                                    <Route
+                                        path="/ProductLine"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <ProductLine />
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                        />
+                                                                        </Routes>
                             </Suspense>
                         </div>
                     </Router>

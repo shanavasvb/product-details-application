@@ -62,4 +62,20 @@ router.get('/:productId', async (req, res) => {
   }
 });
 
+// POST /api/products/fetchByBarcode
+router.post('/api/products/fetchByBarcode', async (req, res) => {
+  const { barcode } = req.body;
+  try {
+    const product = await Product.findOne({ barcode });
+    if (product) {
+      res.json(product);
+    } else {
+      res.status(404).json(null); // or { error: 'Not found' }
+    }
+  } catch (err) {
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+
 module.exports = router;
