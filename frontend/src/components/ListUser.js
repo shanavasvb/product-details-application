@@ -9,20 +9,25 @@ import {
     Avatar,
     Input,
     Button,
-    Select
+    Select,
+    Popconfirm,
+    Modal
 } from 'antd';
 import {
     UserOutlined,
     CrownOutlined,
     TeamOutlined,
     SearchOutlined,
-    ReloadOutlined
+    ReloadOutlined,
+    DeleteOutlined,
+    ExclamationCircleOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
+const { confirm } = Modal;
 
 const ListUser = () => {
     const [users, setUsers] = useState([]);
@@ -30,6 +35,7 @@ const ListUser = () => {
     const [searchText, setSearchText] = useState('');
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [roleFilter, setRoleFilter] = useState('all');
+    const [deleteLoading, setDeleteLoading] = useState(false);
 
     useEffect(() => {
         fetchUsers();
@@ -89,6 +95,50 @@ const ListUser = () => {
         setRoleFilter('all');
     };
 
+    // New function to handle user deletion
+    const deleteUser = async (userId, userName) => {
+        setDeleteLoading(true);
+        try {
+            const response = await axios.delete(`/api/v1/admin/delete-user/${userId}`);
+            if (response.data.success) {
+                // Update local state by removing the deleted user
+                setUsers(prevUsers => prevUsers.filter(user => user._id !== userId));
+                message.success(`${userName} was deleted successfully`);
+            }
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || 'Failed to delete user';
+            message.error(errorMsg);
+            console.error('Error deleting user:', error);
+        } finally {
+            setDeleteLoading(false);
+        }
+    };
+
+    // New function to show deletion confirmation
+    const showDeleteConfirm = (user) => {
+        confirm({
+            title: `Are you sure you want to delete ${user.name}?`,
+            icon: <ExclamationCircleOutlined style={{ color: 'red' }} />,
+            content: (
+                <div>
+                    <p>This action cannot be undone.</p>
+                    <p>User details:</p>
+                    <ul>
+                        <li><strong>Name:</strong> {user.name}</li>
+                        <li><strong>Organization:</strong> {user.organization}</li>
+                        <li><strong>Role:</strong> {user.is_admin ? 'Admin' : 'Employee'}</li>
+                    </ul>
+                </div>
+            ),
+            okText: 'Yes, delete',
+            okType: 'danger',
+            cancelText: 'Cancel',
+            onOk() {
+                deleteUser(user._id, user.name);
+            },
+        });
+    };
+
     const columns = [
         {
             title: 'User Details',
@@ -121,7 +171,7 @@ const ListUser = () => {
             render: (text) => (
                 <Text style={{ fontSize: '13px' }}>{text}</Text>
             ),
-            width: '25%',
+            width: '20%',
         },
         {
             title: 'Role',
@@ -162,7 +212,24 @@ const ListUser = () => {
                     })}
                 </Text>
             ),
-            width: '20%',
+            width: '15%',
+        },
+        {
+            title: 'Actions',
+            key: 'actions',
+            render: (_, record) => (
+                <Button
+                    danger
+                    icon={<DeleteOutlined />}
+                    size="small"
+                    onClick={() => showDeleteConfirm(record)}
+                    loading={deleteLoading}
+                    disabled={record.is_admin} // Optional: prevent deleting admins
+                >
+                    Delete
+                </Button>
+            ),
+            width: '10%',
         },
     ];
 

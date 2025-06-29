@@ -8,6 +8,7 @@ import Register from './components/Register';
 import AdminDashboard from './components/AdminDashboard';
 import Profile from './components/Profile';
 import ListUser from './components/ListUser';
+import ApproveNotification from './components/ApprovalNotifications';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import RoleBasedLayoutRoute from './components/RoleBasedLayoutRoute';
 
@@ -221,6 +222,7 @@ function App() {
                                     />
 
                                     <Route path="/homepage/:productId" element={<ProductData />} />
+                                    <Route path='/approveNotification' element={<ApproveNotification/>}/>
 
                                     {/* Auth routes */}
                                     <Route path="/login" element={<Login />} />
