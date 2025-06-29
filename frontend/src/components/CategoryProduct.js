@@ -10,6 +10,9 @@ const CategoryProducts = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const user = JSON.parse(localStorage.getItem('user'));
+  const isAdmin = user?.is_admin;
+
 
   const navigate = useNavigate();
 
@@ -356,14 +359,19 @@ const CategoryProducts = () => {
                 onMouseEnter={() => setHoveredCard(product._id || index)}
                 onMouseLeave={() => setHoveredCard(null)}
               >
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  height: '4px',
-                  background: 'linear-gradient(90deg,rgb(128, 203, 253), #8b5cf6,rgb(128, 203, 253))'
-                }}></div>
+               <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: isAdmin
+                  ? 'linear-gradient(90deg,rgb(81, 126, 247), #8b5cf6, rgb(231, 74, 223))'  // green gradient
+                  : 'linear-gradient(90deg, rgb(128, 203, 253), #8b5cf6, rgb(128, 203, 253))'
+              }}
+            ></div>
+
 
                 <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                   <h3 style={productNameStyles}>
@@ -377,11 +385,11 @@ const CategoryProducts = () => {
 
                   <div style={quantityUnitStyles}>
                     <span style={quantityBadgeStyles}>
-                      Qty: {getQuantity(product)}
+                      Qty: {getQuantity(product)} {getUnit(product)}
                     </span>
-                    <span style={unitBadgeStyles}>
-                      {getUnit(product)}
-                    </span>
+                    {/* <span style={unitBadgeStyles}>
+                      
+                    </span> */}
                   </div>
                 </div>
               </div>
