@@ -9,6 +9,7 @@ import AdminDashboard from './components/AdminDashboard';
 import Profile from './components/Profile';
 import ListUser from './components/ListUser';
 import ApproveNotification from './components/ApprovalNotifications';
+import BarcodeSearch from './components/BarcodeSearch';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 
@@ -282,6 +283,8 @@ function App() {
                                             </LazyWrapper>
                                         }
                                     />
+                                    <Route path="/barcode-search" element={<BarcodeSearch />} />
+
                                 </Routes>
                             </Suspense>
                         </div>

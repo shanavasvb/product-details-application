@@ -1,5 +1,3 @@
-//productController.js
-
 const Product = require('../models/product');
 const Category = require('../models/category');
 const ProductLine = require('../models/productLine');
@@ -7,6 +5,9 @@ const Brand = require('../models/brand');
 const ProductFeature = require('../models/productFeatureSchema');
 const Specification = require('../models/specefication');
 
+/**
+ * Get all filter options (categories, product lines, brands)
+ */
 const getFilters = async (req, res) => {
   try {
     const categories = await Category.find();
@@ -26,6 +27,9 @@ const getFilters = async (req, res) => {
   }
 };
 
+/**
+ * Get products with pagination and filters
+ */
 const getProducts = async (req, res) => {
   const {
     search = '',
@@ -70,7 +74,7 @@ const getProducts = async (req, res) => {
       name: p.ProductName,
       quantity: p.Quantity,
       unit: p.Unit,
-    //   image: p.ImageURL || '', // Optional
+      // image: p.ImageURL || '', // Optional
       Brand_name: brandMap[p.Brand_id] || '',
       Category_name: categoryMap[p.Category_id] || '',
       ProductLine_name: productLineMap[p.ProductLine_id] || ''
@@ -87,6 +91,9 @@ const getProducts = async (req, res) => {
   }
 };
 
+/**
+ * Get a single product by ID
+ */
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findOne({ Product_id: req.params.id }).lean();
@@ -118,6 +125,151 @@ const getProductById = async (req, res) => {
   }
 };
 
+/**
+ * Search products by an array of barcodes
+ * @param {Object} req - Express request object with barcodes array in body
+ * @param {Object} res - Express response object
+ */
+const searchByBarcodes = async (req, res) => {
+  try {
+    const { barcodes } = req.body;
 
-module.exports = { getFilters, getProducts, getProductById };
+    // Validate input
+    if (!barcodes || !Array.isArray(barcodes) || barcodes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid array of barcodes'
+      });
+    }
 
+    // Find products by barcode
+    const products = await Product.find({
+      Barcode: { $in: barcodes }
+    }).lean();
+
+    // Map product data and associated entities
+    const brandIds = [...new Set(products.map(p => p.Brand_id).filter(Boolean))];
+    const categoryIds = [...new Set(products.map(p => p.Category_id).filter(Boolean))];
+    const productLineIds = [...new Set(products.map(p => p.ProductLine_id).filter(Boolean))];
+
+    const [brands, categories, productLines] = await Promise.all([
+      Brand.find({ Brand_id: { $in: brandIds } }),
+      Category.find({ Category_id: { $in: categoryIds } }),
+      ProductLine.find({ ProductLine_id: { $in: productLineIds } })
+    ]);
+
+    const brandMap = brands.reduce((acc, b) => ({ ...acc, [b.Brand_id]: b }), {});
+    const categoryMap = categories.reduce((acc, c) => ({ ...acc, [c.Category_id]: c }), {});
+    const productLineMap = productLines.reduce((acc, p) => ({ ...acc, [p.ProductLine_id]: p }), {});
+
+    const formattedProducts = products.map(product => ({
+      _id: product._id,
+      id: product.Product_id,
+      name: product.ProductName,
+      barcode: product.Barcode,
+      description: product.Description || '',
+      quantity: product.Quantity,
+      unit: product.Unit,
+      category: {
+        id: product.Category_id,
+        name: categoryMap[product.Category_id]?.Category_name || ''
+      },
+      brand: {
+        id: product.Brand_id,
+        name: brandMap[product.Brand_id]?.Brand_name || ''
+      },
+      productLine: {
+        id: product.ProductLine_id,
+        name: productLineMap[product.ProductLine_id]?.ProductLine_name || ''
+      }
+    }));
+
+    // Find which barcodes were not found
+    const foundBarcodes = products.map(product => product.Barcode);
+    const notFoundBarcodes = barcodes.filter(barcode => !foundBarcodes.includes(barcode));
+
+    res.json({
+      success: true,
+      count: formattedProducts.length,
+      data: formattedProducts,
+      notFound: notFoundBarcodes,
+      notFoundCount: notFoundBarcodes.length
+    });
+  } catch (error) {
+    console.error('Error searching products by barcodes:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'An error occurred while searching products'
+    });
+  }
+};
+
+/**
+ * Get detailed product information including features and specifications
+ * @param {Object} req - Express request object with product ID
+ * @param {Object} res - Express response object
+ */
+const getProductDetails = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id).lean();
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Get associated data
+    const [brand, category, productLine, featureDoc, specificationDoc] = await Promise.all([
+      Brand.findOne({ Brand_id: product.Brand_id }),
+      Category.findOne({ Category_id: product.Category_id }),
+      ProductLine.findOne({ ProductLine_id: product.ProductLine_id }),
+      ProductFeature.findOne({ Product_id: product.Product_id }).lean(),
+      Specification.findOne({ Product_id: product.Product_id }).lean()
+    ]);
+
+    const productDetails = {
+      _id: product._id,
+      id: product.Product_id,
+      name: product.ProductName,
+      barcode: product.Barcode,
+      description: product.Description || '',
+      quantity: product.Quantity,
+      unit: product.Unit,
+      category: category ? {
+        id: category.Category_id,
+        name: category.Category_name
+      } : null,
+      brand: brand ? {
+        id: brand.Brand_id,
+        name: brand.Brand_name
+      } : null,
+      productLine: productLine ? {
+        id: productLine.ProductLine_id,
+        name: productLine.ProductLine_name
+      } : null,
+      features: featureDoc?.Features || [],
+      specifications: specificationDoc?.Specification || {}
+    };
+
+    res.json({
+      success: true,
+      data: productDetails
+    });
+  } catch (error) {
+    console.error('Error fetching product details:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'An error occurred while fetching product details'
+    });
+  }
+};
+
+module.exports = {
+  getFilters,
+  getProducts,
+  getProductById,
+  searchByBarcodes,
+  getProductDetails
+};
