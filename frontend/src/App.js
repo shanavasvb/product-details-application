@@ -25,6 +25,8 @@ const CategoryProducts = lazy(() => import("./components/CategoryProduct"));
 const ProductLine = lazy(() => import("./components/ProductLine"));
 const ProductDetails = lazy(() => import("./components/ProductDetails")); 
 const ProductFetch = lazy(() => import("./components/ProductFetch")); 
+const Draft = lazy(() => import("./components/AdminDraftList")); 
+
 
 // Loading component with better styling
 const LoadingSpinner = () => (
@@ -298,15 +300,6 @@ function App() {
                                     {/* Default route */}
                                     <Route path="/" element={<Navigate to="/login" replace />} />
 
-                                    {/* Lazy-loaded routes */}
-                                    {/* <Route
-                                        path="/Category"
-                                        element={
-                                            <LazyWrapper>
-                                                <CategoryPage />
-                                            </LazyWrapper>
-                                        }
-                                    /> */}
                                     <Route
                                         path="/Category"
                                         element={
@@ -314,6 +307,18 @@ function App() {
                                             <RoleBasedLayoutRoute>
                                                 <LazyWrapper>
                                                 <CategoryPage />
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                        />
+                                        <Route
+                                        path="/draft"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <Draft />
                                                 </LazyWrapper>
                                             </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
