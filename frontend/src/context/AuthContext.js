@@ -20,8 +20,10 @@ export const AuthProvider = ({ children }) => {
         const userData = localStorage.getItem('user');
 
         if (token && userData) {
-            setUser(JSON.parse(userData));
+            const parsedUser = JSON.parse(userData);
+            setUser(parsedUser);
             axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            console.log("✅ Loaded user from localStorage:", parsedUser);
         }
         setLoading(false);
     }, []);

@@ -222,6 +222,9 @@ function Homepage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+
 
   useEffect(() => {
     const fetchFilters = async () => {
@@ -272,6 +275,43 @@ function Homepage() {
 
   return (
     <div style={styles.container}>
+
+    <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', position: 'relative' }}>
+  <div style={{ cursor: 'pointer', padding: '8px' }} onClick={() => setMenuOpen(!menuOpen)}>
+    <span style={{ fontSize: '24px' }}>⋮</span>
+  </div>
+
+  {menuOpen && (
+    <div style={{
+      position: 'absolute',
+      top: '36px',
+      right: '8px',
+      backgroundColor: 'white',
+      border: '1px solid #e2e8f0',
+      borderRadius: '10px',
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+      zIndex: 10
+    }}>
+      <div
+        onClick={() => {
+          if (user.is_admin) navigate('/homepage/trashed-products');
+          else navigate('/homepage/draft-products');
+        }}
+        style={{
+          padding: '10px 20px',
+          cursor: 'pointer',
+          fontSize: '0.95rem',
+          color: '#2d3748',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        {user.is_admin ? 'Trashed Products' : 'Draft Products'}
+      </div>
+      </div>
+    )}
+  </div>
+
+
       <div style={styles.header}>
         <h1 style={styles.title}>Product Collection</h1>
       </div>
