@@ -1,35 +1,53 @@
-// routes/draftRoutes.js
 const express = require('express');
 const router = express.Router();
-const Draft = require('../models/draft'); // Adjust path as needed
+const Draft = require('../models/draft');
+const User = require('../models/User');
 
-// // GET - Load existing draft for a specific product and employee
-// router.get('/:productId/:employeeId', async (req, res) => {
-//   try {
-//     const { productId, employeeId } = req.params;
+// GET - Get all drafts with employee info (for admin overview)
+router.get('/', async (req, res) => {
+  try {
+    const drafts = await Draft.find()
+      .populate('employeeId', 'name email') 
+      .sort({ lastSaved: -1 }); // Sort by most recent first
+    res.json(drafts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// GET - Get all pending drafts for admin review
+router.get('/admin/pending', async (req, res) => {
+  try {
+    const pendingDrafts = await Draft.find({ 
+      saveType: 'manual',
+      isPublished: false 
+    })
+    .populate('employeeId', 'name email') // Populate employee details
+    .sort({ lastSaved: -1 });
     
-//     console.log(`Fetching draft for productId: ${productId}, employeeId: ${employeeId}`);
+    res.json(pendingDrafts);
+  } catch (error) {
+    console.error('Error loading pending drafts:', error);
+    res.status(500).json({ message: 'Server error loading pending drafts', error: error.message });
+  }
+});
 
-//     // Fixed: Use Draft (capital D) consistently
-//     const drafts = await Draft.find({ productId, employeeId })
-//       .sort({ lastSaved: -1 })
-//       .limit(1);
+// GET - Get drafts by employee
+router.get('/employee/:employeeId', async (req, res) => {
+  try {
+    const { employeeId } = req.params;
+    
+    const drafts = await Draft.find({ employeeId: employeeId })
+      .sort({ lastSaved: -1 });
+    
+    res.json(drafts);
+  } catch (error) {
+    console.error('Error loading employee drafts:', error);
+    res.status(500).json({ message: 'Server error loading employee drafts', error: error.message });
+  }
+});
 
-//     console.log('Found drafts:', drafts);
-
-//     if (!drafts.length) {
-//       return res.status(404).json({ message: 'Draft not found' });
-//     }
-
-//     // Return the most recent draft
-//     res.json(drafts[0]);
-//   } catch (error) {
-//     console.error('Error loading draft:', error);
-//     res.status(500).json({ message: 'Server error loading draft', error: error.message });
-//   }
-// });
-
-// create a new draft (by employee)
+// POST - Create a new draft (by employee)
 router.post('/', async (req, res) => {
   try {
     const { productId, employeeId, draftData, saveType } = req.body;
@@ -78,7 +96,7 @@ router.put('/:draftId', async (req, res) => {
   }
 });
 
-// PUT - Approve draft (Fixed route to match frontend)
+// PUT - Approve draft
 router.put('/:draftId/approve', async (req, res) => {
   try {
     const { draftId } = req.params;
@@ -127,7 +145,7 @@ router.put('/:draftId/approve', async (req, res) => {
   }
 });
 
-// PUT - Reject draft (Fixed route to match frontend)
+// PUT - Reject draft
 router.put('/:draftId/reject', async (req, res) => {
   try {
     const { draftId } = req.params;
@@ -154,39 +172,7 @@ router.put('/:draftId/reject', async (req, res) => {
   }
 });
 
-// GET - Get all drafts for admin review
-router.get('/admin/pending', async (req, res) => {
-  try {
-    const pendingDrafts = await Draft.find({ 
-      saveType: 'manual',
-      isPublished: false 
-    })
-    .populate('employeeId', 'name email') // Populate employee details
-    .sort({ lastSaved: -1 });
-    
-    res.json(pendingDrafts);
-  } catch (error) {
-    console.error('Error loading pending drafts:', error);
-    res.status(500).json({ message: 'Server error loading pending drafts', error: error.message });
-  }
-});
-
-// GET - Get drafts by employee
-router.get('/employee/:employeeId', async (req, res) => {
-  try {
-    const { employeeId } = req.params;
-    
-    const drafts = await Draft.find({ employeeId: employeeId })
-      .sort({ lastSaved: -1 });
-    
-    res.json(drafts);
-  } catch (error) {
-    console.error('Error loading employee drafts:', error);
-    res.status(500).json({ message: 'Server error loading employee drafts', error: error.message });
-  }
-});
-
-// DELETE - Delete draft
+// DELETE - Delete draft by ID
 router.delete('/:draftId', async (req, res) => {
   try {
     const { draftId } = req.params;

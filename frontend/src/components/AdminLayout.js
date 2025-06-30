@@ -9,7 +9,8 @@ const menuItems = [
   { label: 'Fetch Products', path: '/product-fetch', icon: <Upload size={18} /> },
   { label: 'Manage Employee', path: '/list-user', icon: <Users size={18} /> },
   { label: 'Profile', path: '/profile', icon: <Users size={18} /> },
-  { label: 'Approve Products', path: '/approve', icon: <Package size={18} /> }
+  { label: 'Approve Products', path: '/approve', icon: <Package size={18} /> },
+  { label: 'Draft', path: '/draft', icon: <Package size={18} /> }
 ];
 
 function AdminLayout({ children }) {
