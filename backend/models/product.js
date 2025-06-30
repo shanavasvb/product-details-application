@@ -11,7 +11,8 @@ const productSchema = new mongoose.Schema({
   Description: String,
   Unit: String,
   Quantity: String,
-  Review_Status : String
+  Review_Status : String,
+  Is_Delete:Boolean
 });
 
-module.exports = mongoose.model('Product', productSchema);
+module.exports = mongoose.model('products', productSchema);

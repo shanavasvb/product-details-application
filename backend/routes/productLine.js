@@ -72,6 +72,21 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// Search ProductLines by name
+router.get('/search', async (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ error: 'Query parameter "q" is required' });
 
+    const results = await ProductLine.find({
+      ProductLine_name: { $regex: new RegExp(query, 'i') } // case-insensitive
+    });
+
+    res.json(results);
+  } catch (err) {
+    console.error('Error searching ProductLine:', err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
 
 module.exports = router;

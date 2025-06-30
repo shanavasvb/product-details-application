@@ -40,6 +40,9 @@ app.use('/api/v1/categories', require('./routes/category'));
 app.use('/api/v1/productLines', require('./routes/productLineRoute'));
 app.use('/api/v1/brands', require('./routes/brand'));
 app.use('/api/v1/approvalNotify',require('./routes/approvalNotify'));
+app.use('/api/v1/draft', require('./routes/draftRoutes'));
+app.use('/api/v1',require('./routes/sendNotification'));
+app.use('/api/v1/productEdit',require('./routes/adminEdit'));
 
 const createDefaultAdmin = async () => {
     try {

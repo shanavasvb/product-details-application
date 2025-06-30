@@ -34,7 +34,7 @@ const draftSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   },
-  saveType : String, //represents auto save or manual save 
+  saveType : String,
   isPublished: {
     type: Boolean,
     default: false

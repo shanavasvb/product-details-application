@@ -1,24 +1,24 @@
 const mongoose = require('mongoose');
 
 const notificationSchema = new mongoose.Schema({
-  message: {
+  message: { //notification message
     type: String,
     required: true
   },
   type: {
-    type: String, //editing, registratio request
+    type: String, //edit, registration request, new item added through running script(represents the type of notification)
     required: true
   },
   senderId: {
-    type: String, // employeeID
+    type: String, 
     required: true
   },
   receiverRole: {
-    type: String, //mostly, the reciever will be admin
+    type: String, //most probably admin, since admin should always notified by the edits made by employye   
     required: true
   },
   relatedId: {
-    type: String, 
+    type: String, //To store product id, edit cheytha productinta id
     required: true
   },
   timestamp: {

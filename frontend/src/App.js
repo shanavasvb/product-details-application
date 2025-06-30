@@ -17,7 +17,10 @@ import RoleBasedLayoutRoute from './components/RoleBasedLayoutRoute';
 
 // Import pages
 import Homepage from './components/Homepage';
-import ProductData from './components/ProductData'; // Fixed import name to match actual component
+import ProductData from './components/ProductData'; 
+import DraftReview from './components/DraftReview';
+import EmployeeDraft from './components/EmployeeDraft';
+import TrashedProductPage from './components/TrashedProductPage';
 
 // Lazy loaded components
 const CategoryPage = lazy(() => import("./components/Category"));
@@ -224,6 +227,9 @@ function App() {
 
                                     <Route path="/homepage/:productId" element={<ProductData />} />
                                     <Route path='/approveNotification' element={<ApproveNotification/>}/>
+                                    <Route path="/draft-review/:id" element={<DraftReview />} />
+                                    <Route path='/homepage/draft-products' element={<EmployeeDraft/>}/>
+                                    <Route path='/homepage/trashed-products' element={<TrashedProductPage/>}/>
 
                                     {/* Auth routes */}
                                     <Route path="/login" element={<Login />} />
