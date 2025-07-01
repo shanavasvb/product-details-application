@@ -26,6 +26,8 @@ import TrashedProductPage from './components/TrashedProductPage';
 const CategoryPage = lazy(() => import("./components/Category"));
 const CategoryProducts = lazy(() => import("./components/CategoryProduct"));
 const ProductLine = lazy(() => import("./components/ProductLine"));
+const ProductDetails = lazy(() => import("./components/ProductDetails"));
+const ProductFetch = lazy(() => import("./components/ProductFetch"));
 const ProductDetails = lazy(() => import("./components/ProductDetails")); 
 const ProductFetch = lazy(() => import("./components/ProductFetch")); 
 const Draft = lazy(() => import("./components/AdminDraftList")); 
@@ -220,14 +222,15 @@ function App() {
                                         path="/homepage"
                                         element={
                                             <ProtectedRoute>
-                                            <RoleBasedLayoutRoute>
-                                                <Homepage />
-                                            </RoleBasedLayoutRoute>
+                                                <RoleBasedLayoutRoute>
+                                                    <Homepage />
+                                                </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
                                         }
                                     />
 
                                     <Route path="/homepage/:productId" element={<ProductData />} />
+                                    <Route path='/approveNotification' element={<ApproveNotification />} />
                                     <Route path='/approveNotification' element={<ApproveNotification/>}/>
                                     <Route path="/draft-review/:id" element={<DraftReview />} />
                                     <Route path='/homepage/draft-products' element={<EmployeeDraft/>}/>
@@ -250,14 +253,14 @@ function App() {
                                         path="/admin"
                                         element={
                                             <ProtectedRoute>
-                                            <RoleBasedLayoutRoute>
-                                                <LazyWrapper>
-                                                <AdminDashboard/>
-                                                </LazyWrapper>
-                                            </RoleBasedLayoutRoute>
+                                                <RoleBasedLayoutRoute>
+                                                    <LazyWrapper>
+                                                        <AdminDashboard />
+                                                    </LazyWrapper>
+                                                </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
                                         }
-                                        />
+                                    />
 
 
 
@@ -273,14 +276,14 @@ function App() {
                                         path="/list-user"
                                         element={
                                             <ProtectedRoute>
-                                            <RoleBasedLayoutRoute>
-                                                <LazyWrapper>
-                                                <ListUser/>
-                                                </LazyWrapper>
-                                            </RoleBasedLayoutRoute>
+                                                <RoleBasedLayoutRoute>
+                                                    <LazyWrapper>
+                                                        <ListUser />
+                                                    </LazyWrapper>
+                                                </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
                                         }
-                                        />
+                                    />
 
                                     {/* <Route
                                         path="/profile"
@@ -290,18 +293,18 @@ function App() {
                                             </ProtectedRoute>
                                         }
                                     /> */}
-                                     <Route
+                                    <Route
                                         path="/profile"
                                         element={
                                             <ProtectedRoute>
-                                            <RoleBasedLayoutRoute>
-                                                <LazyWrapper>
-                                                <Profile />
-                                                </LazyWrapper>
-                                            </RoleBasedLayoutRoute>
+                                                <RoleBasedLayoutRoute>
+                                                    <LazyWrapper>
+                                                        <Profile />
+                                                    </LazyWrapper>
+                                                </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
                                         }
-                                        />
+                                    />
 
                                     {/* Default route */}
                                     <Route path="/" element={<Navigate to="/login" replace />} />
@@ -322,6 +325,12 @@ function App() {
                                         path="/draft"
                                         element={
                                             <ProtectedRoute>
+                                                <RoleBasedLayoutRoute>
+                                                    <LazyWrapper>
+                                                        <CategoryPage />
+                                                    </LazyWrapper>
+                                                </RoleBasedLayoutRoute>
+
                                             <RoleBasedLayoutRoute>
                                                 <LazyWrapper>
                                                 <Draft />
@@ -329,7 +338,7 @@ function App() {
                                             </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
                                         }
-                                        />
+                                    />
 
                                     <Route
                                         path="/category/:categoryId/products"
@@ -348,16 +357,16 @@ function App() {
                                             </LazyWrapper>
                                         }
                                     />
-                                    <Route path="/product/:productId" element={<ProductDetails />} /> 
-                                    
+                                    <Route path="/product/:productId" element={<ProductDetails />} />
+
                                     <Route
                                         path="/product-fetch"
                                         element={
                                             <LazyWrapper>
-                                            <ProductFetch />
+                                                <ProductFetch />
                                             </LazyWrapper>
                                         }
-                                        />
+                                    />
 
 
 
@@ -372,24 +381,35 @@ function App() {
                                         }
 
                                     />
-                                    <Route path="/barcode-search" element={<BarcodeSearch />} />
+                                    <Route path="/barcode-search" element={<BarcodeSearch />
 
-                                </Routes>
 
                                     /> */}
-
                                     <Route
-                                        path="/ProductLine"
+                                        path="/barcode-search"
                                         element={
                                             <ProtectedRoute>
-                                            <RoleBasedLayoutRoute>
-                                                <LazyWrapper>
-                                                <ProductLine />
-                                                </LazyWrapper>
-                                            </RoleBasedLayoutRoute>
+                                                <RoleBasedLayoutRoute>
+                                                    <LazyWrapper>
+                                                        <BarcodeSearch />
+                                                    </LazyWrapper>
+                                                </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
                                         }
                                         />
+
+                                            <Route
+                                                path="/ProductLine"
+                                                element={
+                                                    <ProtectedRoute>
+                                                        <RoleBasedLayoutRoute>
+                                                            <LazyWrapper>
+                                                                <ProductLine />
+                                                            </LazyWrapper>
+                                                        </RoleBasedLayoutRoute>
+                                                    </ProtectedRoute>
+                                                }
+                                            />
                                                                         </Routes>
 
                             </Suspense>
