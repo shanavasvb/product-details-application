@@ -18,7 +18,9 @@ import {
     InfoCircleOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
-import ProductList from './ProductList'; // We'll create this component next
+import ProductList from './ProductList'; // Assuming this component exists
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -30,6 +32,8 @@ const BarcodeSearch = () => {
     const [products, setProducts] = useState([]);
     const [notFound, setNotFound] = useState([]);
     const [searched, setSearched] = useState(false);
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     const handleInputChange = (e) => {
         setInputValue(e.target.value);
