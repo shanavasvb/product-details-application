@@ -17,7 +17,10 @@ import RoleBasedLayoutRoute from './components/RoleBasedLayoutRoute';
 
 // Import pages
 import Homepage from './components/Homepage';
-import ProductData from './components/ProductData'; // Fixed import name to match actual component
+import ProductData from './components/ProductData'; 
+import DraftReview from './components/DraftReview';
+import EmployeeDraft from './components/EmployeeDraft';
+import TrashedProductPage from './components/TrashedProductPage';
 
 // Lazy loaded components
 const CategoryPage = lazy(() => import("./components/Category"));
@@ -25,6 +28,10 @@ const CategoryProducts = lazy(() => import("./components/CategoryProduct"));
 const ProductLine = lazy(() => import("./components/ProductLine"));
 const ProductDetails = lazy(() => import("./components/ProductDetails"));
 const ProductFetch = lazy(() => import("./components/ProductFetch"));
+const ProductDetails = lazy(() => import("./components/ProductDetails")); 
+const ProductFetch = lazy(() => import("./components/ProductFetch")); 
+const Draft = lazy(() => import("./components/AdminDraftList")); 
+
 
 // Loading component with better styling
 const LoadingSpinner = () => (
@@ -224,6 +231,10 @@ function App() {
 
                                     <Route path="/homepage/:productId" element={<ProductData />} />
                                     <Route path='/approveNotification' element={<ApproveNotification />} />
+                                    <Route path='/approveNotification' element={<ApproveNotification/>}/>
+                                    <Route path="/draft-review/:id" element={<DraftReview />} />
+                                    <Route path='/homepage/draft-products' element={<EmployeeDraft/>}/>
+                                    <Route path='/homepage/trashed-products' element={<TrashedProductPage/>}/>
 
                                     {/* Auth routes */}
                                     <Route path="/login" element={<Login />} />
@@ -298,17 +309,20 @@ function App() {
                                     {/* Default route */}
                                     <Route path="/" element={<Navigate to="/login" replace />} />
 
-                                    {/* Lazy-loaded routes */}
-                                    {/* <Route
-                                        path="/Category"
-                                        element={
-                                            <LazyWrapper>
-                                                <CategoryPage />
-                                            </LazyWrapper>
-                                        }
-                                    /> */}
                                     <Route
                                         path="/Category"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <CategoryPage />
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                        />
+                                        <Route
+                                        path="/draft"
                                         element={
                                             <ProtectedRoute>
                                                 <RoleBasedLayoutRoute>
@@ -316,6 +330,12 @@ function App() {
                                                         <CategoryPage />
                                                     </LazyWrapper>
                                                 </RoleBasedLayoutRoute>
+
+                                            <RoleBasedLayoutRoute>
+                                                <LazyWrapper>
+                                                <Draft />
+                                                </LazyWrapper>
+                                            </RoleBasedLayoutRoute>
                                             </ProtectedRoute>
                                         }
                                     />

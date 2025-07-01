@@ -4,7 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
-const adminRoute=require('./routes/admin')
+const adminRoute=require('./routes/admin');
 
 const app = express();
  
@@ -30,16 +30,22 @@ const categoryRoutes = require('./routes/categoryRoutes');
 const productLineRoutes = require('./routes/productLine');
 const productRoutes = require('./routes/productRoutes');
 const enrichedProductRoute = require('./routes/enrichedProduct');
+const draftRoutes = require('./routes/draftRoutes');
+
 app.use('/api/v1/productLine', productLineRoutes);
 app.use('/api/v1/enriched-products', enrichedProductRoute);
 app.use('/api/v1/category', categoryRoutes);
-app.use('/api/v1/products', productRoutes); // ✅ moved up
+app.use('/api/v1/products', productRoutes); 
+app.use('/api/v1/drafts', draftRoutes);
 
 app.use('/api/v1/product', require('./routes/product'));
 app.use('/api/v1/categories', require('./routes/category'));
 app.use('/api/v1/productLines', require('./routes/productLineRoute'));
 app.use('/api/v1/brands', require('./routes/brand'));
 app.use('/api/v1/approvalNotify',require('./routes/approvalNotify'));
+app.use('/api/v1/draft', require('./routes/draftRoutes'));
+app.use('/api/v1',require('./routes/sendNotification'));
+app.use('/api/v1/productEdit',require('./routes/adminEdit'));
 
 const createDefaultAdmin = async () => {
     try {

@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { FaEdit, FaTrash, FaSave } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaSave, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; 
 
 function ProductData() {
   
@@ -18,13 +19,20 @@ function ProductData() {
     Brand: false
   });
 
-  // Get user admin status from localStorage (matches your login implementation)
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userId, setUserId] = useState(null);
+  const [draftId, setDraftId] = useState(null);
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const userData = JSON.parse(localStorage.getItem('user') || '{}');
-    setIsAdmin(userData.is_admin || false);
-  }, []);
+    if (user) {
+      setIsAdmin(user.is_admin || false);
+      setUserId(user._id || user.id);
+    }
+  }, [user]);
+
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -39,12 +47,118 @@ function ProductData() {
     fetchProduct();
   }, [productId]);
 
-  const handleEditClick = () => setIsEditing(true);
-  const handleSaveClick = () => {
-    setProduct(editedProduct);
-    setIsEditing(false);
-    alert('Save action triggered (no backend update)');
+  useEffect(() => {
+    if (isEditing && !isAdmin && userId) {
+      loadDraftData();
+    }
+  }, [isEditing, isAdmin, userId]);
+
+  const loadDraftData = async () => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/v1/draft/${productId}/${userId}`);
+      if (response.data) {
+        setEditedProduct(response.data.draftData);
+        setDraftId(response.data._id);
+        setLastSaved(new Date(response.data.lastSaved));
+      }
+    } catch (err) {
+      console.log('No existing draft found or error loading draft:', err);
+    }
   };
+
+  useEffect(() => {
+    if (isEditing && !isAdmin && userId && Object.keys(editedProduct).length > 0) {
+      const autoSaveTimer = setTimeout(() => {
+        autoSaveDraft();
+      }, 2000); 
+
+      return () => clearTimeout(autoSaveTimer);
+    }
+  }, [editedProduct, isEditing, isAdmin, userId]);
+
+  const autoSaveDraft = async () => {
+    if (!userId || isAdmin || Object.keys(editedProduct).length === 0) return;
+    
+    setIsAutoSaving(true);
+    try {
+      const draftData = {
+        productId: productId,
+        employeeId: userId,
+        draftData: { ...editedProduct }, 
+        saveType: 'auto'
+      };
+
+      console.log('Saving draft data:', draftData); 
+
+      if (draftId) {
+        await axios.put(`http://localhost:5000/api/v1/draft/${draftId}`, draftData);
+      } else {
+        const response = await axios.post('http://localhost:5000/api/v1/draft', draftData);
+        setDraftId(response.data._id);
+      }
+      
+      setLastSaved(new Date());
+    } catch (err) {
+      console.error('Auto-save failed:', err);
+    } finally {
+      setIsAutoSaving(false);
+    }
+  };
+
+  const handleEditClick = () => setIsEditing(true);
+
+  const handleSaveClick = async () => {
+    if (isAdmin) {
+      const payload = { ...editedProduct };
+      const response = await axios.put(`http://localhost:5000/api/v1/productEdit/${productId}`, payload);
+      setProduct(response.data.product || response.data);
+      setIsEditing(false);
+      alert('Product updated successfully!');
+    } else {
+      try {
+        const draftData = {
+        productId: productId,
+        employeeId: userId,
+        draftData: { ...editedProduct },
+        saveType: 'manual'
+      };
+      
+      if (draftId) {
+        await axios.put(`http://localhost:5000/api/v1/draft/${draftId}`, draftData);
+      } else {
+        const response = await axios.post('http://localhost:5000/api/v1/draft', draftData);
+        setDraftId(response.data._id);
+      }
+            
+      //Notification data (data need to be store in notifications collection) 
+      const senderName = user?.name?.trim() || user?.username?.trim() || 'Employee';
+
+      const notificationData = {
+        message: `${senderName} has edited the product ${editedProduct.ProductName || product.ProductName}, Barcode - (${editedProduct.Barcode || product.Barcode})`,
+        type: 'editing',
+        senderId: user?._id || user?.id,
+        receiverRole: 'admin',
+        relatedId: productId.toString(),
+        timestamp: new Date().toISOString()
+      };
+
+      console.log('Sending notification:', notificationData);
+      
+      // Send notification
+      const notificationResponse = await axios.post('http://localhost:5000/api/v1/notification', notificationData);
+      console.log('Notification sent successfully:', notificationResponse.data);
+      
+      setIsEditing(false);
+      setLastSaved(new Date());
+      alert('Draft saved successfully! Your changes will be reviewed by an admin.');
+      
+    } catch (err) {
+      console.error('Failed to save draft or send notification:', err);
+      alert('Failed to save draft. Please try again.');
+    }
+  }
+};
+
   const handleDeleteClick = () => alert('Delete action triggered');
 
   const fetchSuggestions = (field, value) => {
@@ -55,7 +169,7 @@ function ProductData() {
       Brand: '/api/v1/brands/search'
     }[field];
 
-    axios.get(`${endpoint}?q=${value}`).then(res => {
+    axios.get(`http://localhost:5000${endpoint}?q=${value}`).then(res => {
       if (field === 'Category') setCategorySuggestions(res.data);
       if (field === 'ProductLine') setProductLineSuggestions(res.data);
       if (field === 'Brand') setBrandSuggestions(res.data);
@@ -83,41 +197,54 @@ function ProductData() {
     return () => clearTimeout(delay);
   }, [editedProduct.Brand]);
 
-  const renderInputWithSuggestions = (field, value, suggestions, setValue, keyName) => (
+  const handleSuggestionSelect = (field, selectedValue) => {
+    setEditedProduct(prev => {
+      const updated = { ...prev, [field]: selectedValue };
+      console.log(`Updated ${field} to:`, selectedValue); 
+      console.log('Full updated product:', updated); 
+      return updated;
+    });
+    setShowSuggestions(prev => ({ ...prev, [field]: false }));
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedProduct(prev => {
+      const updated = { ...prev, [field]: value };
+      console.log(`Input changed for ${field}:`, value); 
+      return updated;
+    });
+    setShowSuggestions(prev => ({ ...prev, [field]: true }));
+  };
+
+  const renderInputWithSuggestions = (field, value, suggestions, keyName) => (
     <div style={{ position: 'relative' }}>
-    <input
-      type="text"
-      value={value}
-      onChange={(e) => {
-        setValue(e.target.value);
-        setShowSuggestions(prev => ({ ...prev, [field]: true }));
-      }}
-      onBlur={() => setTimeout(() => setShowSuggestions(prev => ({ ...prev, [field]: false })), 200)}
-      style={styles.input}
-    />
-    {showSuggestions[field] && (
-      <div style={styles.suggestionBox}>
-        {suggestions.length === 0 ? (
-          <div style={styles.noSuggestions}>No matches found</div>
-        ) : (
-          suggestions.map((item, index) => (
-            <div
-              key={index}
-              style={styles.suggestionItem}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = styles.suggestionItemHover.backgroundColor}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
-              onMouseDown={() => {
-                setEditedProduct(prev => ({ ...prev, [field]: item[keyName] }));
-                setShowSuggestions(prev => ({ ...prev, [field]: false }));
-              }}
-            >
-              {item[keyName]}
-            </div>
-          ))
-        )}
-      </div>
-    )}
-  </div>
+      <input
+        type="text"
+        value={value || ''} 
+        onChange={(e) => handleInputChange(field, e.target.value)}
+        onBlur={() => setTimeout(() => setShowSuggestions(prev => ({ ...prev, [field]: false })), 200)}
+        style={styles.input}
+      />
+      {showSuggestions[field] && (
+        <div style={styles.suggestionBox}>
+          {suggestions.length === 0 ? (
+            <div style={styles.noSuggestions}>No matches found</div>
+          ) : (
+            suggestions.map((item, index) => (
+              <div
+                key={index}
+                style={styles.suggestionItem}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = styles.suggestionItemHover.backgroundColor}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = ''}
+                onMouseDown={() => handleSuggestionSelect(field, item[keyName])}
+              >
+                {item[keyName]}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
   );
 
   if (!product) {
@@ -126,13 +253,50 @@ function ProductData() {
 
   return (
     <div style={styles.container}>
+
+      <button onClick={() => window.history.back()} style={styles.backButton}>← Back</button>
+
       <div style={styles.header}>
-        <h1 style={styles.productName}>{product.ProductName}</h1>
+
+        {isEditing ? (
+          <input type="text" value={editedProduct.ProductName || ''} onChange={(e) => setEditedProduct({ ...editedProduct, ProductName: e.target.value })}
+          style={styles.productNameInput}/>) : (
+            <h1 style={styles.productName}>{product.ProductName}</h1>
+        )}
+
         <div style={styles.headerActions}>
-          <button onClick={isEditing ? handleSaveClick : handleEditClick} style={styles.actionButton}>
-            {isEditing ? <FaSave /> : <FaEdit />}
-            <span style={styles.actionButtonText}>{isEditing ? "Save" : "Edit"}</span>
-          </button>
+          {!isAdmin && isEditing && ( //display the last auto save time
+            <div style={styles.autoSaveStatus}>
+              {isAutoSaving ? (
+                <span style={styles.autoSaveText}>
+                  <FaSpinner style={{ ...styles.spinnerIcon, animation: 'spin 1s linear infinite' }} />
+                  Auto-saving...
+                </span>
+              ) : lastSaved ? (
+                <span style={styles.autoSaveText}>
+                  Last saved: {lastSaved.toLocaleTimeString()}
+                </span>
+              ) : null}
+            </div>
+          )}
+          
+          {isEditing ? (
+            <><button onClick={handleSaveClick} style={styles.actionButton}>
+              <FaSave />
+              <span style={styles.actionButtonText}>Save</span>
+            </button>
+            {!isAdmin && (
+              <button style={{ ...styles.actionButton, backgroundColor: '#28a745' }}>
+                <span style={styles.actionButtonText}>Submit for Approval</span>
+              </button>
+            )}
+            </>
+          ) : (
+          <button onClick={handleEditClick} style={styles.submitButton}>
+            <FaEdit />
+            <span style={styles.actionButtonText}>Edit</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -148,7 +312,6 @@ function ProductData() {
                     'Category',
                     editedProduct.Category,
                     categorySuggestions,
-                    (val) => setEditedProduct(prev => ({ ...prev, Category: val })),
                     'Category_name'
                   )
                 ) : (
@@ -164,7 +327,6 @@ function ProductData() {
                     'ProductLine',
                     editedProduct.ProductLine,
                     productLineSuggestions,
-                    (val) => setEditedProduct(prev => ({ ...prev, ProductLine: val })),
                     'ProductLine_name'
                   )
                 ) : (
@@ -180,7 +342,6 @@ function ProductData() {
                     'Brand',
                     editedProduct.Brand,
                     brandSuggestions,
-                    (val) => setEditedProduct(prev => ({ ...prev, Brand: val })),
                     'Brand_name'
                   )
                 ) : (
@@ -194,13 +355,13 @@ function ProductData() {
                   <div style={styles.quantityGroup}>
                     <input
                       type="number"
-                      value={editedProduct.Quantity}
+                      value={editedProduct.Quantity || ''}
                       onChange={(e) => setEditedProduct({ ...editedProduct, Quantity: e.target.value })}
                       style={styles.quantityInput}
                     />
                     <input
                       type="text"
-                      value={editedProduct.Unit}
+                      value={editedProduct.Unit || ''}
                       onChange={(e) => setEditedProduct({ ...editedProduct, Unit: e.target.value })}
                       style={styles.unitInput}
                       placeholder="Unit"
@@ -216,7 +377,7 @@ function ProductData() {
                 {isEditing ? (
                   <input
                     type="text"
-                    value={editedProduct.Barcode}
+                    value={editedProduct.Barcode || ''}
                     onChange={(e) => setEditedProduct({ ...editedProduct, Barcode: e.target.value })}
                     style={styles.input}
                   />
@@ -226,12 +387,13 @@ function ProductData() {
               </div>
             </div>
           </div>
-        {/* Description set*/}
+        
+        {/* Description section */}
            <div style={styles.section}>
              <h2 style={styles.sectionTitle}>Description</h2>
              {isEditing ? (
               <textarea
-                value={editedProduct.Description}
+                value={editedProduct.Description || ''}
                 onChange={(e) => setEditedProduct({ ...editedProduct, Description: e.target.value })}
                 style={styles.textarea}
                 rows="4"
@@ -241,19 +403,19 @@ function ProductData() {
             )}
           </div>
 
-          {/* Features set*/}
-          {editedProduct.Features?.length > 0 && (
+          {/* Features section */}
+          {(editedProduct.Features?.length > 0 || isEditing) && (
             <div style={styles.section}>
               <h2 style={styles.sectionTitle}>Key Features</h2>
               <div style={styles.featuresGrid}>
-                {editedProduct.Features.map((feature, index) => (
+                {(editedProduct.Features || []).map((feature, index) => (
                   <div key={index} style={styles.featureCard}>
                     {isEditing ? (
                       <input
                         type="text"
                         value={feature}
                         onChange={(e) => {
-                          const newFeatures = [...editedProduct.Features];
+                          const newFeatures = [...(editedProduct.Features || [])];
                           newFeatures[index] = e.target.value;
                           setEditedProduct({ ...editedProduct, Features: newFeatures });
                         }}
@@ -267,16 +429,27 @@ function ProductData() {
                     )}
                   </div>
                 ))}
+                {isEditing && (
+                  <button
+                    onClick={() => {
+                      const newFeatures = [...(editedProduct.Features || []), ''];
+                      setEditedProduct({ ...editedProduct, Features: newFeatures });
+                    }}
+                    style={styles.addFeatureButton}
+                  >
+                    + Add Feature
+                  </button>
+                )}
               </div>
             </div>
           )}
 
-          {/* Specifications set*/}
-          {editedProduct.Specification && Object.keys(editedProduct.Specification).length > 0 && (
+          {/* Specifications section */}
+          {(editedProduct.Specification && Object.keys(editedProduct.Specification).length > 0) || isEditing ? (
             <div style={styles.section}>
               <h2 style={styles.sectionTitle}>Technical Specifications</h2>
               <div style={styles.specsGrid}>
-                {Object.entries(editedProduct.Specification).map(([key, value], index) => (
+                {Object.entries(editedProduct.Specification || {}).map(([key, value], index) => (
                   <div key={index} style={styles.specItem}>
                     <span style={styles.specKey}>{key}</span>
                     {isEditing ? (
@@ -297,7 +470,7 @@ function ProductData() {
                 ))}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Only show delete button if user is admin */}
@@ -335,6 +508,26 @@ const styles = {
     color: '#666',
     fontWeight: '400'
   },
+  backButton: {
+  position: 'fixed',
+  top: '20px',
+  left: '20px',
+  padding: '10px 16px',
+  backgroundColor: '#ffffff',
+  color: '#3498db',
+  border: '2px solid #3498db',
+  borderRadius: '999px', // pill shape
+  fontSize: '0.95rem',
+  fontWeight: '500',
+  cursor: 'pointer',
+  zIndex: 1001,
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.3s ease',
+  },
+  backButtonHover: {
+  backgroundColor: '#3498db',
+  color: '#ffffff',
+  },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -349,9 +542,49 @@ const styles = {
     color: '#2c3e50',
     margin: 0
   },
+  productNameInput: {
+    fontSize: '1.8rem',
+    fontWeight: '600',
+    color: '#2c3e50',
+    margin: 0,
+    border: '1px solid #ccc',
+    padding: '0.5rem',
+    borderRadius: '4px',
+    width: '70%',
+    backgroundColor: '#fff'
+  },
   headerActions: {
     display: 'flex',
+    alignItems: 'center',
     gap: '1rem'
+  },
+  autoSaveStatus: {
+    display: 'flex',
+    alignItems: 'center'
+  },
+  autoSaveText: {
+    fontSize: '0.8rem',
+    color: '#666',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.3rem'
+  },
+  spinnerIcon: {
+    fontSize: '0.8rem'
+  },
+  submitButton: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    padding: '0.5rem 1rem',
+    backgroundColor: '#28a745', 
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    fontWeight: '500',
+    transition: 'background-color 0.2s ease'
   },
   actionButton: {
     display: 'flex',
@@ -509,6 +742,16 @@ const styles = {
     fontSize: '0.95rem',
     backgroundColor: 'white',
     width: '100%'
+  },
+  addFeatureButton: {
+    padding: '1rem',
+    backgroundColor: '#e9ecef',
+    border: '1px dashed #ced4da',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    color: '#6c757d',
+    textAlign: 'center'
   },
   specsGrid: {
     display: 'grid',

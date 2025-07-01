@@ -12,8 +12,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-
-
 // POST a new category with auto-generated Category_id
 router.post('/', async (req, res) => {
   try {
@@ -47,7 +45,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-
 // PUT (update) a category by _id
 router.put('/:id', async (req, res) => {
   try {
@@ -71,6 +68,21 @@ router.put('/:id', async (req, res) => {
   }
 });
 
+// Search categories by name for admin editing purpose
+router.get('/search', async (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query) return res.status(400).json({ error: 'Query parameter "q" is required' });
 
+    const results = await Category.find({
+      Category_name: { $regex: new RegExp(query, 'i') } // case-insensitive
+    });
+
+    res.json(results);
+  } catch (err) {
+    console.error('Error searching categories:', err);
+    res.status(500).json({ error: 'Server Error' });
+  }
+});
 
 module.exports = router;
