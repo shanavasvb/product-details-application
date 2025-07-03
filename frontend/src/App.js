@@ -397,7 +397,10 @@ function App() {
 
                                     /> */}
 
+
                                     <Route path="/barcode-search" element={<BarcodeSearch />} />
+
+                                    {/* <Route path="/barcode-search" element={<BarcodeSearch />} /> */}
 
 
                                     <Route
