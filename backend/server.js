@@ -18,7 +18,7 @@ app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/admin',adminRoute)
 
 // Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/auth-app')
+mongoose.connect(process.env.MONGODB_URI || '')
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('MongoDB connection error:', err));
 
