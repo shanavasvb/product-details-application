@@ -28,8 +28,8 @@ const CategoryProducts = lazy(() => import("./components/CategoryProduct"));
 const ProductLine = lazy(() => import("./components/ProductLine"));
 const ProductDetails = lazy(() => import("./components/ProductDetails"));
 const ProductFetch = lazy(() => import("./components/ProductFetch"));
-const ProductDetails = lazy(() => import("./components/ProductDetails")); 
-const ProductFetch = lazy(() => import("./components/ProductFetch")); 
+// const ProductDetails = lazy(() => import("./components/ProductDetails")); 
+// const ProductFetch = lazy(() => import("./components/ProductFetch")); 
 const Draft = lazy(() => import("./components/AdminDraftList")); 
 
 
@@ -396,7 +396,12 @@ function App() {
 
 
                                     /> */}
+
+
                                     <Route path="/barcode-search" element={<BarcodeSearch />} />
+
+                                    {/* <Route path="/barcode-search" element={<BarcodeSearch />} /> */}
+
 
                                     <Route
                                         path="/barcode-search"
