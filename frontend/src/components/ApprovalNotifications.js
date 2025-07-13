@@ -25,7 +25,7 @@ const ApproveNotification = () => {
       state: {
         productId: notification.relatedId,
         employeeId: notification.senderId,
-        saveType: 'manual',
+        saveType: 'save',
         notificationId: notification._id
       }
     });

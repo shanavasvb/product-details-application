@@ -1,138 +1,90 @@
-import React from 'react';
-
-const mockDrafts = [
- {
-   _id: "686256b337f8696ed899f530",
-   productId: "P00026",
-   employeeId: "68514f35a32b42f2d1511788",
-   draftData: {
-     Barcode: "8902102127819",
-     Brand: "Henko",
-     Category: "Laundry Detergents",
-     ProductLine: "Detergent Powder",
-     ProductName: "Henko Stain Care Detergent Powder, 4 kg Pouch",
-     Description:
-       "Henko Stain Care Detergent Powder is specially formulated to tackle stubborn stains while being gentle on your clothes. It not only cleans but also cares for fabric color and texture, offering a perfect balance of performance and care. Ideal for both machine and hand washing.",
-     Quantity: 4000,
-     Unit: "gm",
-     Features: [
-       "Removes tough stains like ink, oil, and curry",
-       "Preserves fabric color and softness",
-       "Long-lasting floral fragrance",
-       "Dissolves easily in water without leaving residue",
-       "Works with both hand and machine wash",
-     ],
-     Specification: {
-       Form: "Powder",
-       Color: "Light purple/blue powder",
-       Fragrance: "Fresh floral",
-       Compatibility: "Top and front load washing machines",
-       PackagingType: "Pouch",
-       NetWeight: "4 kg",
-     },
-   },
-   lastSaved: "2025-06-30T09:19:47.131Z",
- },
- {
-   _id: "6862569437f8696ed899f4f4",
-   productId: "P00001",
-   employeeId: "68514f35a32b42f2d1511788",
-   draftData: {
-     Barcode: "8902102163961",
-     Brand: "Exo",
-     Category: "Dishwash Detergents",
-     ProductLine: "Dishwash Bar",
-     ProductName: "Exo Anti-Bacterial Dishwash Bar – Ginger Twist",
-     Description:
-       "Anti-bacterial dishwash bar infused with ginger extract, designed to eliminate grease and germs while protecting hands from harsh chemicals.",
-     Quantity: 360,
-     Unit: "gm",
-     Features: [
-       "Kills 99.9% germs",
-       "Ginger extract for freshness",
-       "Removes stubborn grease",
-       "Skin-friendly formula",
-     ],
-     Specification: {
-       PackType: "Multipack",
-       PackSize: "4 x 90g",
-       CountryOfOrigin: "India",
-       Manufacturer: "Jyothy Laboratories Ltd.",
-     },
-   },
-   lastSaved: "2025-06-30T09:19:16.196Z",
- },
-];
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext'; 
+import { useNavigate } from 'react-router-dom';
 
 const EmployeeDraft = () => {
- return (
-   <div style={styles.container}>
-     <div style={styles.header}>
-       <h1 style={styles.title}>Draft Products</h1>
-       {/* <p style={styles.subtitle}>Auto-saved product entries ready for review</p> */}
-     </div>
-     
-     <div style={styles.cardsContainer}>
-       {mockDrafts.map((draft) => (
-         <div key={draft._id} style={styles.card}>
-           <div style={styles.cardHeader}>
-             <div style={styles.brandBadge}>{draft.draftData.Brand}</div>
-             <div style={styles.categoryBadge}>{draft.draftData.Category}</div>
-           </div>
-           
-           <div style={styles.cardBody}>
-             <h3 style={styles.productName}>{draft.draftData.ProductName}</h3>
-             {/* <p style={styles.description}>{draft.draftData.Description}</p> */}
-             
-             <div style={styles.detailsGrid}>
-               <div style={styles.detailItem}>
-                 <span style={styles.detailLabel}>Barcode:</span>
-                 <span style={styles.detailValue}>{draft.draftData.Barcode}</span>
-               </div>
-               {/* <div style={styles.detailItem}>
-                 <span style={styles.detailLabel}>Product ID:</span>
-                 <span style={styles.detailValue}>{draft.productId}</span>
-               </div> */}
-               <div style={styles.detailItem}>
-                 <span style={styles.detailLabel}>Quantity:</span>
-                 <span style={styles.detailValue}>{draft.draftData.Quantity} {draft.draftData.Unit}</span>
-               </div>
-             </div>
+  const { user } = useAuth(); 
+  const [drafts, setDrafts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-             {/* <div style={styles.featuresSection}>
-               <h4 style={styles.featuresTitle}>Key Features:</h4>
-               <div style={styles.featuresList}>
-                 {draft.draftData.Features.slice(0, 3).map((feature, index) => (
-                   <span key={index} style={styles.featureTag}>
-                     {feature}
-                   </span>
-                 ))}
-                 {draft.draftData.Features.length > 3 && (
-                   <span style={styles.moreFeatures}>
-                     +{draft.draftData.Features.length - 3} more
-                   </span>
-                 )}
-               </div>
-             </div> */}
-           </div>
-           
-           <div style={styles.cardFooter}>
-             <div style={styles.timestamp}>
-               <span style={styles.timestampLabel}>Last saved:</span>
-               <span style={styles.timestampValue}>
-                 {new Date(draft.lastSaved).toLocaleString()}
-               </span>
-             </div>
-             <div style={styles.actions}>
-               <button style={styles.editButton}>Edit Draft</button>
-               {/* <button style={styles.publishButton}>Publish</button> */}
-             </div>
-           </div>
-         </div>
-       ))}
-     </div>
-   </div>
- );
+  useEffect(() => {
+    console.log("User in EmployeeDraft:", user);
+
+    if (!user?.id) return;
+
+    axios
+      .get(`http://localhost:5000/api/v1/drafts/employee/${user.id}?type=save`)
+      .then((res) => {
+        setDrafts(res.data);
+      })
+      .catch((err) => {
+        console.error('Error fetching drafts:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [user]);
+
+  const handleEditDraft = (productId) => {
+    navigate(`/homepage/${productId}`, {
+      state: { employeeId: user?.id }
+    });
+  };
+
+  if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+  if (drafts.length === 0) return <div style={{ padding: '2rem' }}>No saved drafts found.</div>;
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.header}>
+        <h1 style={styles.title}>Draft Products</h1>
+      </div>
+
+      <div style={styles.cardsContainer}>
+        {drafts.map((draft) => (
+          <div key={draft._id} style={styles.card}>
+            <div style={styles.cardHeader}>
+              <div style={styles.brandBadge}>{draft.draftData.Brand}</div>
+              <div style={styles.categoryBadge}>{draft.draftData.Category}</div>
+            </div>
+
+            <div style={styles.cardBody}>
+              <h3 style={styles.productName}>{draft.draftData.ProductName}</h3>
+
+              <div style={styles.detailsGrid}>
+                <div style={styles.detailItem}>
+                  <span style={styles.detailLabel}>Barcode:</span>
+                  <span style={styles.detailValue}>{draft.draftData.Barcode}</span>
+                </div>
+                <div style={styles.detailItem}>
+                  <span style={styles.detailLabel}>Quantity:</span>
+                  <span style={styles.detailValue}>
+                    {draft.draftData.Quantity} {draft.draftData.Unit}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div style={styles.cardFooter}>
+              <div style={styles.timestamp}>
+                <span style={styles.timestampLabel}>Last saved:</span>
+                <span style={styles.timestampValue}>
+                  {new Date(draft.lastSaved).toLocaleString()}
+                </span>
+              </div>
+              <div style={styles.actions}>
+                <button style={styles.editButton} onClick={() => handleEditDraft(draft.productId)}>
+                  Edit Draft
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 const styles = {
@@ -296,8 +248,8 @@ const styles = {
  },
  editButton: {
    padding: '0.5rem 1rem',
-   backgroundColor: '#f3f4f6',
-   color: '#374151',
+   backgroundColor: '#10b981',
+   color: 'white',
    border: '1px solid #d1d5db',
    borderRadius: '6px',
    fontSize: '0.875rem',

@@ -5,9 +5,15 @@ const {
     getProducts,
     getProductById,
     searchByBarcodes,
-    getProductDetails
+    getProductDetails,
+    markProductDeleted,
+    getTrashedProducts,
+    restoreProduct
 } = require('../controllers/productController');
 
+router.put('/mark-deleted/:id', markProductDeleted);
+router.get('/trashed', getTrashedProducts);
+router.put('/restore/:id', restoreProduct);
 router.get('/filters', getFilters);
 router.get('/', getProducts);
 router.get('/:id', getProductById);
