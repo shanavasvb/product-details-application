@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { FaEdit, FaTrash, FaSave, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext'; 
+import { useLocation } from 'react-router-dom';
 
 function ProductData() {
   
@@ -19,19 +20,21 @@ function ProductData() {
     Brand: false
   });
 
+  const location = useLocation(); 
+
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState(null);
   const [draftId, setDraftId] = useState(null);
-  const [isAutoSaving, setIsAutoSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
+  // const [isAutoSaving, setIsAutoSaving] = useState(false);
+  // const [lastSaved, setLastSaved] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
     if (user) {
       setIsAdmin(user.is_admin || false);
-      setUserId(user._id || user.id);
+      setUserId(location.state?.employeeId || user._id || user.id);
     }
-  }, [user]);
+  }, [user, location]);
 
 
   useEffect(() => {
@@ -59,107 +62,188 @@ function ProductData() {
       if (response.data) {
         setEditedProduct(response.data.draftData);
         setDraftId(response.data._id);
-        setLastSaved(new Date(response.data.lastSaved));
+        // setLastSaved(new Date(response.data.lastSaved));
       }
     } catch (err) {
       console.log('No existing draft found or error loading draft:', err);
     }
   };
 
-  useEffect(() => {
-    if (isEditing && !isAdmin && userId && Object.keys(editedProduct).length > 0) {
-      const autoSaveTimer = setTimeout(() => {
-        autoSaveDraft();
-      }, 2000); 
+  // useEffect(() => {
+  //   if (isEditing && !isAdmin && userId && Object.keys(editedProduct).length > 0) {
+  //     const autoSaveTimer = setTimeout(() => {
+  //       autoSaveDraft();
+  //     }, 2000); 
 
-      return () => clearTimeout(autoSaveTimer);
-    }
-  }, [editedProduct, isEditing, isAdmin, userId]);
+  //     return () => clearTimeout(autoSaveTimer);
+  //   }
+  // }, [editedProduct, isEditing, isAdmin, userId]);
 
-  const autoSaveDraft = async () => {
-    if (!userId || isAdmin || Object.keys(editedProduct).length === 0) return;
+  // const autoSaveDraft = async () => {
+  //   if (!userId || isAdmin || Object.keys(editedProduct).length === 0) return;
     
-    setIsAutoSaving(true);
-    try {
-      const draftData = {
-        productId: productId,
-        employeeId: userId,
-        draftData: { ...editedProduct }, 
-        saveType: 'auto'
-      };
+  //   setIsAutoSaving(true);
+  //   try {
+  //     const draftData = {
+  //       productId: productId,
+  //       employeeId: userId,
+  //       draftData: { ...editedProduct }, 
+  //       saveType: 'auto'
+  //     };
 
-      console.log('Saving draft data:', draftData); 
+  //     console.log('Saving draft data:', draftData); 
 
-      if (draftId) {
-        await axios.put(`http://localhost:5000/api/v1/draft/${draftId}`, draftData);
-      } else {
-        const response = await axios.post('http://localhost:5000/api/v1/draft', draftData);
-        setDraftId(response.data._id);
-      }
+  //     if (draftId) {
+  //       await axios.put(`http://localhost:5000/api/v1/draft/${draftId}`, draftData);
+  //     } else {
+  //       const response = await axios.post('http://localhost:5000/api/v1/draft', draftData);
+  //       setDraftId(response.data._id);
+  //     }
       
-      setLastSaved(new Date());
-    } catch (err) {
-      console.error('Auto-save failed:', err);
-    } finally {
-      setIsAutoSaving(false);
-    }
-  };
+  //     setLastSaved(new Date());
+  //   } catch (err) {
+  //     console.error('Auto-save failed:', err);
+  //   } finally {
+  //     setIsAutoSaving(false);
+  //   }
+  // };
 
   const handleEditClick = () => setIsEditing(true);
 
-  const handleSaveClick = async () => {
-    if (isAdmin) {
-      const payload = { ...editedProduct };
-      const response = await axios.put(`http://localhost:5000/api/v1/productEdit/${productId}`, payload);
-      setProduct(response.data.product || response.data);
-      setIsEditing(false);
-      alert('Product updated successfully!');
-    } else {
-      try {
-        const draftData = {
-        productId: productId,
-        employeeId: userId,
-        draftData: { ...editedProduct },
-        saveType: 'manual'
-      };
-      
-      if (draftId) {
-        await axios.put(`http://localhost:5000/api/v1/draft/${draftId}`, draftData);
-      } else {
-        const response = await axios.post('http://localhost:5000/api/v1/draft', draftData);
-        setDraftId(response.data._id);
-      }
-            
-      //Notification data (data need to be store in notifications collection) 
-      const senderName = user?.name?.trim() || user?.username?.trim() || 'Employee';
+const saveDraft = async (saveType) => {
+  if (!userId || isAdmin) return;
 
+  try {
+    const draftData = {
+      productId: productId,
+      employeeId: userId,
+      draftData: {
+        ...editedProduct,
+        Category: editedProduct.Category || product.Category || '',
+        ProductLine: editedProduct.ProductLine || product.ProductLine || '',
+        Brand: editedProduct.Brand || product.Brand || ''
+      },
+      saveType: saveType
+    };
+
+    if (draftId) {
+      await axios.put(`http://localhost:5000/api/v1/draft/${draftId}`, draftData);
+    } else {
+      const response = await axios.post('http://localhost:5000/api/v1/draft', draftData);
+      setDraftId(response.data._id);
+    }
+
+    if (saveType === 'submitted') {
+      const senderName = user?.name?.trim() || user?.username?.trim() || 'Employee';
       const notificationData = {
-        message: `${senderName} has edited the product ${editedProduct.ProductName || product.ProductName}, Barcode - (${editedProduct.Barcode || product.Barcode})`,
+        message: `${senderName} has submitted the product ${editedProduct.ProductName || product.ProductName} (Barcode: ${editedProduct.Barcode || product.Barcode}) for approval.`,
         type: 'editing',
         senderId: user?._id || user?.id,
         receiverRole: 'admin',
         relatedId: productId.toString(),
         timestamp: new Date().toISOString()
       };
-
-      console.log('Sending notification:', notificationData);
-      
-      // Send notification
-      const notificationResponse = await axios.post('http://localhost:5000/api/v1/notification', notificationData);
-      console.log('Notification sent successfully:', notificationResponse.data);
-      
-      setIsEditing(false);
-      setLastSaved(new Date());
-      alert('Draft saved successfully! Your changes will be reviewed by an admin.');
-      
-    } catch (err) {
-      console.error('Failed to save draft or send notification:', err);
-      alert('Failed to save draft. Please try again.');
+      await axios.post('http://localhost:5000/api/v1/notification', notificationData);
     }
+
+    setIsEditing(false);
+    alert(saveType === 'submitted' ? 'Submitted for approval!' : 'Draft saved successfully.');
+  } catch (err) {
+    console.error(`Failed to ${saveType}:`, err);
+    alert(`Failed to ${saveType}. Please try again.`);
   }
 };
 
-  const handleDeleteClick = () => alert('Delete action triggered');
+const handleSaveClick = async () => {
+  if (isAdmin) {
+    const payload = { ...editedProduct };
+    const response = await axios.put(`http://localhost:5000/api/v1/productEdit/${productId}`, payload);
+    setProduct(response.data.product || response.data);
+    setIsEditing(false);
+    alert('Product updated successfully!');
+  }
+};
+
+  const handleDeleteClick = async () => {
+  const confirmDelete = window.confirm('Are you sure you want to delete this product?');
+  if (!confirmDelete) return;
+
+  console.log("=== PRODUCT DEBUG INFO ===");
+  console.log("Full product object:", product);
+  console.log("Product type:", typeof product);
+  console.log("Product is null/undefined:", product == null);
+  
+  if (product) {
+    console.log("All product keys:", Object.keys(product));
+    console.log("All product entries:", Object.entries(product));
+    console.log("Product as JSON:", JSON.stringify(product, null, 2));
+  }
+  
+  console.log("Product._id (MongoDB ObjectId):", product?._id);
+  console.log("Product.id (Custom Product_id):", product?.id);
+  console.log("Product.Product_id:", product?.Product_id);
+  console.log("Product.productId:", product?.productId);
+  console.log("Product.product_id:", product?.product_id);
+  console.log("Product.ID:", product?.ID);
+  console.log("=== END DEBUG INFO ===");
+
+  let productId = product?._id;
+  
+  if (!productId && product?.id) {
+    try {
+      console.log("Fetching product details to get MongoDB ObjectId...");
+      const detailsResponse = await axios.get(`http://localhost:5000/api/v1/product/details/${product.id}`);
+      productId = detailsResponse.data.data._id;
+      console.log("Got MongoDB ObjectId from details:", productId);
+    } catch (error) {
+      console.error("Failed to fetch product details:", error);
+      alert("Unable to get product details for deletion. Please try again.");
+      return;
+    }
+  }
+  
+  if (!productId) {
+    alert('Product ID not found. Cannot delete product.');
+    console.error('No valid product ID found in:', product);
+    return;
+  }
+
+  const productIdString = String(productId).trim();
+  console.log("Using productId:", productIdString);
+  console.log("Type of productId:", typeof productIdString);
+  console.log("Length of productId:", productIdString.length);
+
+  const objectIdRegex = /^[0-9a-fA-F]{24}$/;
+  const isValidObjectId = objectIdRegex.test(productIdString);
+  console.log("Is valid ObjectId format:", isValidObjectId);
+  
+  if (!isValidObjectId) {
+    alert('Invalid product ID format. Cannot delete product.');
+    console.error('Invalid ObjectId format:', productIdString);
+    return;
+  }
+
+  try {
+    console.log("Making DELETE request to:", `http://localhost:5000/api/v1/product/mark-deleted/${productIdString}`);
+    
+    const response = await axios.put(`http://localhost:5000/api/v1/product/mark-deleted/${productIdString}`);
+    console.log("Delete response:", response.data);
+    alert('Product marked as deleted.');
+    window.history.back();
+  } catch (error) {
+    console.error('Failed to delete product:', error);
+    console.error('Error response:', error.response?.data);
+    console.error('Error status:', error.response?.status);
+    
+    if (error.response?.status === 400) {
+      alert('Invalid product ID. Please check the product data.');
+    } else if (error.response?.status === 404) {
+      alert('Product not found. It may have already been deleted.');
+    } else {
+      alert('Failed to delete product. Please try again.');
+    }
+  }
+};
 
   const fetchSuggestions = (field, value) => {
     if (!value) return;
@@ -265,7 +349,7 @@ function ProductData() {
         )}
 
         <div style={styles.headerActions}>
-          {!isAdmin && isEditing && ( //display the last auto save time
+          {/* {!isAdmin && isEditing && ( //display the last auto save time
             <div style={styles.autoSaveStatus}>
               {isAutoSaving ? (
                 <span style={styles.autoSaveText}>
@@ -278,20 +362,32 @@ function ProductData() {
                 </span>
               ) : null}
             </div>
-          )}
+          )} */}
           
           {isEditing ? (
-            <><button onClick={handleSaveClick} style={styles.actionButton}>
-              <FaSave />
-              <span style={styles.actionButtonText}>Save</span>
-            </button>
-            {!isAdmin && (
-              <button style={{ ...styles.actionButton, backgroundColor: '#28a745' }}>
+          <>
+            {isAdmin ? (
+              <button onClick={handleSaveClick} style={styles.actionButton}>
+                <FaSave />
+                <span style={styles.actionButtonText}>Save</span>
+              </button>
+            ) : (
+            <>
+              <button onClick={() => saveDraft('save')} style={styles.actionButton}>
+                <FaSave />
+                <span style={styles.actionButtonText}>Save</span>
+              </button>
+              <button
+                onClick={() => saveDraft('submitted')}
+                style={{ ...styles.actionButton, backgroundColor: '#28a745' }}
+              >
                 <span style={styles.actionButtonText}>Submit for Approval</span>
               </button>
-            )}
             </>
+            )}
+          </>
           ) : (
+
           <button onClick={handleEditClick} style={styles.submitButton}>
             <FaEdit />
             <span style={styles.actionButtonText}>Edit</span>
@@ -304,7 +400,7 @@ function ProductData() {
         <div style={styles.productInfo}>
           <div style={styles.section}>
             <div style={styles.detailsGrid}>
-              {/* Category */}
+              {/* Category Section*/}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Category</label>
                 {isEditing ? (
@@ -319,7 +415,7 @@ function ProductData() {
                 )}
               </div>
 
-              {/* Product Line */}
+              {/* Product Line Section*/}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Product Line</label>
                 {isEditing ? (
@@ -334,7 +430,7 @@ function ProductData() {
                 )}
               </div>
 
-              {/* Brand */}
+              {/* Brand Section*/}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Brand</label>
                 {isEditing ? (
@@ -349,6 +445,7 @@ function ProductData() {
                 )}
               </div>
 
+                {/* Quantity and unit section */}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Quantity</label>
                 {isEditing ? (
@@ -372,6 +469,7 @@ function ProductData() {
                 )}
               </div>
 
+                  {/* BArcode Section*/}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Barcode</label>
                 {isEditing ? (

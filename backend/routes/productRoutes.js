@@ -77,5 +77,4 @@ router.post('/api/products/fetchByBarcode', async (req, res) => {
   }
 });
 
-
 module.exports = router;
