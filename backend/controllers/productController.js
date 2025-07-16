@@ -24,7 +24,7 @@ const markProductDeleted = async (req, res) => {
       return res.status(404).json({ message: 'Product not found' });
     }
 
-    res.json({ message: 'Product marked as deleted', product: updated });
+    res.json({ message: 'Product deleted', product: updated });
   } catch (error) {
     console.error('Error marking product as deleted:', error);
     res.status(500).json({ message: 'Server error' });
@@ -65,7 +65,7 @@ const getTrashedProducts = async (req, res) => {
     const brandMap = {};
     brands.forEach(b => { brandMap[b.Brand_id] = b.Brand_name; });
 
-    // Enrich products
+    // get th features, specifications, category, productLine and brand of the dleted product
     const enrichedProducts = trashedProducts.map(product => ({
       ...product,
       Features: featureMap[product.Product_id] || [],
@@ -142,6 +142,7 @@ const getProducts = async (req, res) => {
     const totalCount = await Product.countDocuments(query);
 
     const products = await Product.find(query)
+      .sort({ ProductName: 1 }) 
       .skip(skip)
       .limit(parseInt(limit))
       .lean();
@@ -168,7 +169,8 @@ const getProducts = async (req, res) => {
       // image: p.ImageURL || '', // Optional
       Brand_name: brandMap[p.Brand_id] || '',
       Category_name: categoryMap[p.Category_id] || '',
-      ProductLine_name: productLineMap[p.ProductLine_id] || ''
+      ProductLine_name: productLineMap[p.ProductLine_id] || '',
+      Review_Status: p.Review_Status || ''
     }));
 
     res.json({
@@ -208,7 +210,8 @@ const getProductById = async (req, res) => {
       Quantity: product.Quantity,
       Unit: product.Unit,
       Features: featureDoc?.Features || [],
-      Specification: specificationDoc?.Specification || {}
+      Specification: specificationDoc?.Specification || {},
+      Review_Status: product.Review_Status || ''
     });
   } catch (err) {
     console.error('Failed to fetch product:', err);
@@ -341,7 +344,8 @@ const getProductDetails = async (req, res) => {
         name: productLine.ProductLine_name
       } : null,
       features: featureDoc?.Features || [],
-      specifications: specificationDoc?.Specification || {}
+      specifications: specificationDoc?.Specification || {},
+      Review_Status: product.Review_Status || ''
     };
 
     res.json({
