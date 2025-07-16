@@ -38,6 +38,22 @@ const EmployeeDraft = () => {
 
   return (
     <div style={styles.container}>
+
+      <button
+        onClick={() => navigate('/homepage')}
+        style={styles.backButton}
+        onMouseEnter={(e) => Object.assign(e.target.style, styles.backButtonHover)}
+        onMouseLeave={(e) => Object.assign(e.target.style, styles.backButton)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
+          </svg>
+        <span style={{ fontSize: '15px', fontWeight: '500' }}>Back</span>
+        </div>
+      </button>
+
       <div style={styles.header}>
         <h1 style={styles.title}>Draft Products</h1>
       </div>
@@ -95,6 +111,32 @@ const styles = {
    minHeight: '100vh',
    lineHeight: '1.6',
  },
+ backButton: {
+      position: 'fixed',
+      top: '20px',
+      left: '20px',
+      zIndex: 1000,
+      // backgroundColor: '#f3f4f6',
+      color: '#000000ff',
+      border: '1px solid #d1d5db',
+      borderRadius: '10px',
+      padding: '10px 16px',
+      fontSize: '14px',
+      fontWeight: '600',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      cursor: 'pointer',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+      transition: 'all 0.3s ease',
+      textDecoration: 'none'
+    },
+    // backButtonHover: {
+    //   backgroundColor: '#e5e7eb',
+    //   color: '#000000',
+    //   transform: 'translateY(-2px)',
+    //   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)'
+    // },
  header: {
    marginBottom: '2rem',
    textAlign: 'center',

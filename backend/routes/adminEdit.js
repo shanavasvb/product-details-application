@@ -27,7 +27,8 @@ router.put('/:id', async (req, res) => {
       Quantity,
       Unit,
       Barcode,
-      Description
+      Description,
+      Review_Status: 'Approved'
     };
 
     // ---- Resolve or Create Category ----

@@ -4,6 +4,7 @@ import { FaEdit, FaTrash, FaSave, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext'; 
 import { useLocation } from 'react-router-dom';
+import { useMemo } from 'react';
 
 function ProductData() {
   
@@ -228,7 +229,7 @@ const handleSaveClick = async () => {
     
     const response = await axios.put(`http://localhost:5000/api/v1/product/mark-deleted/${productIdString}`);
     console.log("Delete response:", response.data);
-    alert('Product marked as deleted.');
+    alert('Product deleted successfully.');
     window.history.back();
   } catch (error) {
     console.error('Failed to delete product:', error);
@@ -335,6 +336,8 @@ const handleSaveClick = async () => {
     return <div style={styles.loadingContainer}><p style={styles.loadingText}>Loading product details...</p></div>;
   }
 
+  const isEditDisabled = !isAdmin && product?.Review_Status === 'Pending';
+
   return (
     <div style={styles.container}>
 
@@ -388,10 +391,27 @@ const handleSaveClick = async () => {
           </>
           ) : (
 
-          <button onClick={handleEditClick} style={styles.submitButton}>
-            <FaEdit />
-            <span style={styles.actionButtonText}>Edit</span>
+          <div style={styles.editButtonWrapper}>
+            <button
+              onClick={handleEditClick}
+              style={{
+                ...styles.submitButton,
+                backgroundColor: isEditDisabled ? '#ccc' : '#28a745',
+                cursor: isEditDisabled ? 'not-allowed' : 'pointer'
+              }}
+              disabled={isEditDisabled}
+            >
+              <FaEdit />
+              <span style={styles.actionButtonText}>Edit</span>
             </button>
+
+            {isEditDisabled && (
+              <p style={styles.editDisabledMsg}>
+                You can't edit this product because it is under review.
+              </p>
+            )}
+          </div>
+
           )}
         </div>
       </div>
@@ -614,7 +634,7 @@ const styles = {
   backgroundColor: '#ffffff',
   color: '#3498db',
   border: '2px solid #3498db',
-  borderRadius: '999px', // pill shape
+  borderRadius: '999px',
   fontSize: '0.95rem',
   fontWeight: '500',
   cursor: 'pointer',
@@ -625,6 +645,18 @@ const styles = {
   backButtonHover: {
   backgroundColor: '#3498db',
   color: '#ffffff',
+  },
+  editDisabledMsg: {
+    marginTop: '0.5rem',
+    color: '#c0392b',
+    fontSize: '0.9rem',
+    fontWeight: '500'
+  },
+  editButtonWrapper: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '0.3rem'
   },
   header: {
     display: 'flex',
