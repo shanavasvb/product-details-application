@@ -1,8 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const ProductLine = require('../models/productLine'); // Adjust path as needed
+const ProductLine = require('../models/productLine'); 
 
-// GET all ProductLines
 router.get('/', async (req, res) => {
   try {
     const productLines = await ProductLine.find();
@@ -12,7 +11,6 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST a new productLine with auto-generated productline_id
 router.post('/', async (req, res) => {
   try {
     const { ProductLine_name, Category_id } = req.body;
@@ -49,7 +47,6 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT (update) a ProductLine by _id
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -72,14 +69,14 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Search ProductLines by name
+
 router.get('/search', async (req, res) => {
   try {
     const query = req.query.q;
     if (!query) return res.status(400).json({ error: 'Query parameter "q" is required' });
 
     const results = await ProductLine.find({
-      ProductLine_name: { $regex: new RegExp(query, 'i') } // case-insensitive
+      ProductLine_name: { $regex: new RegExp(query, 'i') } 
     });
 
     res.json(results);

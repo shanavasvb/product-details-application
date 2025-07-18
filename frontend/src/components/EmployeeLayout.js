@@ -1,7 +1,3 @@
-
-
-
-
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import {
@@ -239,8 +235,10 @@ const EmployeeLayoutWithHover = ({ children }) => {
     { label: 'Dashboard', path: '/homepage', icon: <FaHome /> },
     { label: 'Category', path: '/category', icon: <FaLayerGroup /> },
     { label: 'Product Line', path: '/productline', icon: <FaCubes /> },
-    { label: 'Fetch Products', path: '/search-by-barcodes', icon: <FaUpload /> },
+    { label: 'Fetch Products', path: '/barcode-search', icon: <FaUpload /> },
+    { label: 'Draft Products', path: '/homepage/draft-products', icon: <FaUpload /> },
     { label: 'Profile', path: '/profile', icon: <FaUserCircle /> }
+   
   ];
 
   const logoutItem = { label: 'Logout', path: '/login', icon: <FaSignOutAlt /> };

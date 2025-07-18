@@ -410,8 +410,10 @@ const Category = () => {
   };
 
   const filteredCategories = categorys.filter((cat) =>
-    cat.Category_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  typeof cat.Category_name === 'string' &&
+  cat.Category_name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   return (
     <div style={styles.mainContainer}>
@@ -477,20 +479,7 @@ const Category = () => {
               />
             </div>
 
-            {/* <div style={styles.viewButtons}>
-              <button
-                style={styles.viewButton(viewMode === 'grid')}
-                onClick={() => setViewMode('grid')}
-              >
-                <Grid />
-              </button>
-              <button
-                style={styles.viewButton(viewMode === 'list')}
-                onClick={() => setViewMode('list')}
-              >
-                <List />
-              </button>
-            </div> */}
+            
             <div style={styles.viewButtons}>
               <button
                 style={styles.viewButton(viewMode === 'grid', isAdmin)}
