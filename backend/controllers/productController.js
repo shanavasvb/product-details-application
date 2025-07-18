@@ -5,9 +5,100 @@ const Brand = require('../models/brand');
 const ProductFeature = require('../models/productFeatureSchema');
 const Specification = require('../models/specefication');
 
-/**
- * Get all filter options (categories, product lines, brands)
- */
+// Mark a product as deleted (soft delete)
+const markProductDeleted = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+    return res.status(400).json({ message: 'Invalid product ID' });
+  }
+
+  try {
+    const updated = await Product.findByIdAndUpdate(
+      id,
+      { Is_Delete: true },
+      { new: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    res.json({ message: 'Product deleted', product: updated });
+  } catch (error) {
+    console.error('Error marking product as deleted:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get trashed products froom database(Is_Delete : true)
+const getTrashedProducts = async (req, res) => {
+  try {
+    const trashedProducts = await Product.find({ Is_Delete: true }).lean();
+
+    const productIds = trashedProducts.map(p => p.Product_id);
+    const categoryIds = trashedProducts.map(p => p.Category_id);
+    const productLineIds = trashedProducts.map(p => p.ProductLine_id);
+    const brandIds = trashedProducts.map(p => p.Brand_id);
+
+    const [features, specs, categories, productLines, brands] = await Promise.all([
+      ProductFeature.find({ Product_id: { $in: productIds } }).lean(),
+      Specification.find({ Product_id: { $in: productIds } }).lean(),
+      Category.find({ Category_id: { $in: categoryIds } }),
+      ProductLine.find({ ProductLine_id: { $in: productLineIds } }),
+      Brand.find({ Brand_id: { $in: brandIds } })
+    ]);
+
+    // Map lookup
+    const featureMap = {};
+    features.forEach(f => { featureMap[f.Product_id] = f.Features; });
+
+    const specMap = {};
+    specs.forEach(s => { specMap[s.Product_id] = s.Specification; });
+
+    const categoryMap = {};
+    categories.forEach(c => { categoryMap[c.Category_id] = c.Category_name; });
+
+    const productLineMap = {};
+    productLines.forEach(p => { productLineMap[p.ProductLine_id] = p.ProductLine_name; });
+
+    const brandMap = {};
+    brands.forEach(b => { brandMap[b.Brand_id] = b.Brand_name; });
+
+    // get th features, specifications, category, productLine and brand of the dleted product
+    const enrichedProducts = trashedProducts.map(product => ({
+      ...product,
+      Features: featureMap[product.Product_id] || [],
+      Specification: specMap[product.Product_id] || {},
+      Category_name: categoryMap[product.Category_id] || 'Unknown',
+      ProductLine_name: productLineMap[product.ProductLine_id] || 'Unknown',
+      Brand_name: brandMap[product.Brand_id] || 'Unknown'
+    }));
+
+    res.json(enrichedProducts);
+  } catch (error) {
+    console.error('Error fetching trashed products:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// restore function
+const restoreProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndUpdate(
+      req.params.id,
+      { Is_Delete: false },
+      { new: true }
+    );
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+    res.json({ message: 'Product restored successfully', product });
+  } catch (error) {
+    console.error('Error restoring product:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Get all filter options (categories, product lines, brands)
 const getFilters = async (req, res) => {
   try {
     const categories = await Category.find();
@@ -27,9 +118,8 @@ const getFilters = async (req, res) => {
   }
 };
 
-/**
- * Get products with pagination and filters
- */
+
+// Get products with pagination and filters
 const getProducts = async (req, res) => {
   const {
     search = '',
@@ -41,7 +131,7 @@ const getProducts = async (req, res) => {
   } = req.query;
 
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  const query = {};
+  const query = { Is_Delete : false };
 
   if (search) query.ProductName = { $regex: search, $options: 'i' };
   if (category) query.Category_id = category;
@@ -52,6 +142,7 @@ const getProducts = async (req, res) => {
     const totalCount = await Product.countDocuments(query);
 
     const products = await Product.find(query)
+      .sort({ ProductName: 1 }) 
       .skip(skip)
       .limit(parseInt(limit))
       .lean();
@@ -70,6 +161,7 @@ const getProducts = async (req, res) => {
     productLines.forEach(p => productLineMap[p.ProductLine_id] = p.ProductLine_name);
 
     const formattedProducts = products.map(p => ({
+      _id: p._id, 
       id: p.Product_id,
       name: p.ProductName,
       quantity: p.Quantity,
@@ -77,7 +169,8 @@ const getProducts = async (req, res) => {
       // image: p.ImageURL || '', // Optional
       Brand_name: brandMap[p.Brand_id] || '',
       Category_name: categoryMap[p.Category_id] || '',
-      ProductLine_name: productLineMap[p.ProductLine_id] || ''
+      ProductLine_name: productLineMap[p.ProductLine_id] || '',
+      Review_Status: p.Review_Status || ''
     }));
 
     res.json({
@@ -91,9 +184,7 @@ const getProducts = async (req, res) => {
   }
 };
 
-/**
- * Get a single product by ID
- */
+// Get a single product by ID
 const getProductById = async (req, res) => {
   try {
     const product = await Product.findOne({ Product_id: req.params.id }).lean();
@@ -108,6 +199,8 @@ const getProductById = async (req, res) => {
     const specificationDoc = await Specification.findOne({ Product_id: product.Product_id }).lean();
 
     res.json({
+      _id: product._id,          
+      Product_id: product.Product_id, 
       Barcode: product.Barcode,
       ProductName: product.ProductName,
       Description: product.Description,
@@ -117,7 +210,8 @@ const getProductById = async (req, res) => {
       Quantity: product.Quantity,
       Unit: product.Unit,
       Features: featureDoc?.Features || [],
-      Specification: specificationDoc?.Specification || {}
+      Specification: specificationDoc?.Specification || {},
+      Review_Status: product.Review_Status || ''
     });
   } catch (err) {
     console.error('Failed to fetch product:', err);
@@ -250,7 +344,8 @@ const getProductDetails = async (req, res) => {
         name: productLine.ProductLine_name
       } : null,
       features: featureDoc?.Features || [],
-      specifications: specificationDoc?.Specification || {}
+      specifications: specificationDoc?.Specification || {},
+      Review_Status: product.Review_Status || ''
     };
 
     res.json({
@@ -271,5 +366,8 @@ module.exports = {
   getProducts,
   getProductById,
   searchByBarcodes,
-  getProductDetails
+  getProductDetails,
+  markProductDeleted,
+  getTrashedProducts,
+  restoreProduct
 };

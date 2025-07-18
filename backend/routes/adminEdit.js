@@ -27,7 +27,8 @@ router.put('/:id', async (req, res) => {
       Quantity,
       Unit,
       Barcode,
-      Description
+      Description,
+      Review_Status: 'Approved'
     };
 
     // ---- Resolve or Create Category ----
@@ -71,7 +72,7 @@ router.put('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Product not found' });
     }
 
-    const productId = updatedProduct._id;
+    const productId = updatedProduct.Product_id;
 
     // ---- Update or Insert Features (replace old with new) ----
     if (Array.isArray(Features)) {

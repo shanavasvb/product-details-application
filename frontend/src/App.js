@@ -229,6 +229,17 @@ function App() {
                                         }
                                     />
 
+                                    <Route
+                                        path="/approveNotification"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <ApproveNotification/>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+
                                     <Route path="/homepage/:productId" element={<ProductData />} />
                                     <Route path='/approveNotification' element={<ApproveNotification />} />
                                     {/* <Route path='/approveNotification' element={<ApproveNotification/>}/> */}
@@ -380,6 +391,13 @@ function App() {
 
 
                                     /> */}
+
+
+                                    <Route path="/barcode-search" element={<BarcodeSearch />} />
+
+                                    {/* <Route path="/barcode-search" element={<BarcodeSearch />} /> */}
+
+
                                     <Route
                                         path="/barcode-search"
                                         element={

@@ -1,75 +1,33 @@
 import React, { useState } from 'react';
 import { RotateCcw, Trash2, Package, Calendar, Tag, Info } from 'lucide-react';
-
-const initialTrashedProducts = [
-  {
-    id: "1",
-    Barcode: "8902102164067",
-    "Product Name": "Exo Dishwash Bar - Anti-Bacterial, Touch & Shine, 200 g Pack",
-    Description: "Exo Dishwash Bar is an anti-bacterial cleaning solution designed to remove tough grease and grime from utensils. Enriched with the goodness of ginger, it ensures effective cleaning while being gentle on hands.",
-    Category: "Household Cleaning",
-    ProductLine: "Dishwashing Bars",
-    Quantity: 600,
-    Unit: "gm",
-    Features: [
-      "Anti-bacterial properties",
-      "Ginger-based formulation",
-      "Tough on grease",
-      "Gentle on hands",
-      "Pleasant fragrance"
-    ],
-    Specification: {
-      Form: "Bar",
-      Color: "Green",
-      Fragrance: "Ginger",
-      "Packaging Type": "Multipack",
-      "Shelf Life": "24 months"
-    },
-    Brand: "Exo",
-    trashedDate: "2025-06-28T14:30:00.000Z"
-  },
-  {
-    id: "2",
-    Barcode: "8902102164166",
-    "Product Name": "Exo Dish Bar 200g x 4pcs (800g)",
-    Description: "Exo Dish Bar is a powerful cleaning solution designed to remove tough grease and grime from utensils. Enriched with the goodness of ginger, it ensures effective cleaning while being gentle on hands.",
-    Category: "Household Cleaning",
-    ProductLine: "Dishwashing Bars",
-    Quantity: 800,
-    Unit: "gm",
-    Features: [
-      "Anti-bacterial properties",
-      "Ginger-based formulation",
-      "Tough on grease",
-      "Gentle on hands",
-      "Pleasant fragrance"
-    ],
-    Specification: {
-      Form: "Bar",
-      Color: "Green",
-      Fragrance: "Ginger",
-      "Packaging Type": "Multipack",
-      "Shelf Life": "24 months"
-    },
-    Brand: "Exo",
-    trashedDate: "2025-06-29T10:15:00.000Z"
-  }
-];
+import axios from 'axios';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const TrashedProductPage = () => {
-  const [trashedProducts, setTrashedProducts] = useState(initialTrashedProducts);
+  const [trashedProducts, setTrashedProducts] = useState([]);
   const [restoredProducts, setRestoredProducts] = useState([]);
+  const navigate = useNavigate();
 
-  const handleRestore = (productId) => {
-    const productToRestore = trashedProducts.find(p => p.id === productId);
-    if (productToRestore) {
-      setTrashedProducts(prev => prev.filter(p => p.id !== productId));
-      setRestoredProducts(prev => [...prev, productToRestore]);
+  useEffect(() => {
+    axios.get('http://localhost:5000/api/v1/product/trashed')
+      .then(res => {
+        console.log('Trashed products response:', res.data);
+        setTrashedProducts(res.data);
+      })
+      .catch(err => console.error('Error fetching trashed products:', err));
+  }, []);
+
+  const handleRestore = async (productId) => {
+    try {
+      const res = await axios.put(`http://localhost:5000/api/v1/product/restore/${productId}`);
+      const restoredProduct = res.data.product;
+      setTrashedProducts(prev => prev.filter(p => p._id !== productId));
+      setRestoredProducts(prev => [...prev, restoredProduct]);
+    } catch (err) {
+      console.error('Restore failed:', err);
+      alert('Failed to restore product.');
     }
-  };
-
-  const handlePermanentDelete = (productId) => {
-    setTrashedProducts(prev => prev.filter(p => p.id !== productId));
   };
 
   const styles = {
@@ -78,6 +36,32 @@ const TrashedProductPage = () => {
       background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     },
+    backButton: {
+      position: 'fixed',
+      top: '20px',
+      left: '20px',
+      zIndex: 1000,
+      // backgroundColor: '#f3f4f6',
+      color: '#000000ff',
+      border: '1px solid #d1d5db',
+      borderRadius: '10px',
+      padding: '10px 16px',
+      fontSize: '14px',
+      fontWeight: '600',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.5rem',
+      cursor: 'pointer',
+      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
+      transition: 'all 0.3s ease',
+      textDecoration: 'none'
+    },
+    // backButtonHover: {
+    //   backgroundColor: '#e5e7eb',
+    //   color: '#000000',
+    //   transform: 'translateY(-2px)',
+    //   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)'
+    // },
     header: {
       backgroundColor: '#ffffff',
       boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
@@ -361,7 +345,22 @@ const TrashedProductPage = () => {
 
   return (
     <div style={styles.container}>
-      {/* Header */}
+
+      <button
+        onClick={() => navigate('/homepage')}
+        style={styles.backButton}
+        onMouseEnter={(e) => Object.assign(e.target.style, styles.backButtonHover)}
+        onMouseLeave={(e) => Object.assign(e.target.style, styles.backButton)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        {/* <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
+          </svg> */}
+        <span style={{ fontSize: '15px', fontWeight: '500' }}>Back</span>
+        </div>
+      </button>
+
       <div style={styles.header}>
         <div style={styles.headerContent}>
           <div style={styles.headerTop}>
@@ -370,7 +369,6 @@ const TrashedProductPage = () => {
             </div>
             <h1 style={styles.title}>Trashed Products</h1>
           </div>
-          {/* <p style={styles.subtitle}>Manage your deleted products and restore them when needed</p> */}
           <div style={styles.stats}>
             <span style={styles.statItem}>
               <Package size={16} />
@@ -387,7 +385,6 @@ const TrashedProductPage = () => {
       </div>
 
       <div style={styles.mainContent}>
-        {/* Restored Products Notification */}
         {restoredProducts.length > 0 && (
           <div style={styles.notification}>
             <div style={styles.notificationContent}>
@@ -399,7 +396,6 @@ const TrashedProductPage = () => {
           </div>
         )}
 
-        {/* Products Grid */}
         {trashedProducts.length === 0 ? (
           <div style={styles.emptyState}>
             <div style={styles.emptyIcon}>
@@ -412,7 +408,7 @@ const TrashedProductPage = () => {
           <div style={styles.productsGrid}>
             {trashedProducts.map(product => (
               <div 
-                key={product.id} 
+                key={product._id} 
                 style={styles.productCard}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.boxShadow = styles.productCardHover.boxShadow;
@@ -421,7 +417,6 @@ const TrashedProductPage = () => {
                   e.currentTarget.style.boxShadow = styles.productCard.boxShadow;
                 }}
               >
-                {/* Header */}
                 <div style={styles.cardHeader}>
                   <div style={styles.cardHeaderTop}>
                     <div style={styles.cardHeaderLeft}>
@@ -429,65 +424,31 @@ const TrashedProductPage = () => {
                         <Package size={20} color="#dc2626" />
                       </div>
                       <div>
-                        <span style={styles.brandBadge}>
-                          {product.Brand}
-                        </span>
+                        <span style={styles.brandBadge}>{product.Brand_name || 'Unknown Brand'}</span>
                       </div>
-                    </div>
-                    <div style={styles.dateInfo}>
-                      <Calendar size={16} />
-                      Trashed on {new Date(product.trashedDate).toLocaleDateString()}
                     </div>
                   </div>
                 </div>
 
                 <div style={styles.cardBody}>
-                  {/* Product Name */}
-                  <h3 style={styles.productName}>
-                    {product["Product Name"]}
-                  </h3>
+                  <h3 style={styles.productName}>{product.ProductName}</h3>
+                  <p style={styles.description}>{product.Description}</p>
 
-                  {/* Description */}
-                  <p style={styles.description}>
-                    {product.Description}
-                  </p>
-
-                  {/* Product Details Grid */}
                   <div style={styles.detailsGrid}>
-                    {/* Basic Info */}
                     <div style={styles.detailSection}>
-                      <h4 style={styles.sectionTitle}>
-                        <Info size={16} />
-                        Product Details
-                      </h4>
+                      <h4 style={styles.sectionTitle}><Info size={16} />Product Details</h4>
                       <div style={styles.detailsList}>
-                        <div style={styles.detailItem}>
-                          <span style={styles.detailLabel}>Barcode:</span>
-                          <span style={styles.detailValueMono}>{product.Barcode}</span>
-                        </div>
-                        <div style={styles.detailItem}>
-                          <span style={styles.detailLabel}>Category:</span>
-                          <span style={styles.detailValue}>{product.Category}</span>
-                        </div>
-                        <div style={styles.detailItem}>
-                          <span style={styles.detailLabel}>Product Line:</span>
-                          <span style={styles.detailValue}>{product.ProductLine}</span>
-                        </div>
-                        <div style={styles.detailItem}>
-                          <span style={styles.detailLabel}>Quantity:</span>
-                          <span style={styles.detailValue}>{product.Quantity} {product.Unit}</span>
-                        </div>
+                        <div style={styles.detailItem}><span style={styles.detailLabel}>Barcode:</span><span style={styles.detailValueMono}>{product.Barcode}</span></div>
+                        <div style={styles.detailItem}><span style={styles.detailLabel}>Category:</span><span style={styles.detailValue}>{product.Category_name}</span></div>
+                        <div style={styles.detailItem}><span style={styles.detailLabel}>Product Line:</span><span style={styles.detailValue}>{product.ProductLine_name}</span></div>
+                        <div style={styles.detailItem}><span style={styles.detailLabel}>Quantity:</span><span style={styles.detailValue}>{product.Quantity} {product.Unit}</span></div>
                       </div>
                     </div>
 
-                    {/* Features */}
                     <div style={styles.detailSection}>
-                      <h4 style={styles.sectionTitle}>
-                        <Tag size={16} />
-                        Features
-                      </h4>
+                      <h4 style={styles.sectionTitle}><Tag size={16} />Features</h4>
                       <ul style={styles.featuresList}>
-                        {product.Features.map((feature, idx) => (
+                        {(product.Features || []).map((feature, idx) => (
                           <li key={idx} style={styles.featureItem}>
                             <span style={styles.featureBullet}></span>
                             {feature}
@@ -497,11 +458,10 @@ const TrashedProductPage = () => {
                     </div>
                   </div>
 
-                  {/* Specifications */}
                   <div style={styles.specificationsSection}>
                     <h4 style={styles.sectionTitle}>Specifications</h4>
                     <div style={styles.specificationsGrid}>
-                      {Object.entries(product.Specification).map(([key, value]) => (
+                      {Object.entries(product.Specification || {}).map(([key, value]) => (
                         <div key={key} style={styles.specItem}>
                           <div style={styles.specLabel}>{key}</div>
                           <div style={styles.specValue}>{value}</div>
@@ -510,10 +470,9 @@ const TrashedProductPage = () => {
                     </div>
                   </div>
 
-                  {/* Action Buttons */}
                   <div style={styles.actions}>
                     <button
-                      onClick={() => handleRestore(product.id)}
+                      onClick={() => handleRestore(product._id)}
                       style={styles.restoreButton}
                       onMouseEnter={(e) => {
                         e.target.style.backgroundColor = '#15803d';
@@ -527,19 +486,6 @@ const TrashedProductPage = () => {
                       <RotateCcw size={16} />
                       Restore Product
                     </button>
-                    {/* <button
-                      onClick={() => handlePermanentDelete(product.id)}
-                      style={styles.deleteButton}
-                      onMouseEnter={(e) => {
-                        e.target.style.backgroundColor = '#fee2e2';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.backgroundColor = '#fef2f2';
-                      }}
-                    >
-                      <Trash2 size={16} />
-                      Delete Forever
-                    </button> */}
                   </div>
                 </div>
               </div>

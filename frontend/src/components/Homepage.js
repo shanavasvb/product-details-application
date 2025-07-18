@@ -225,7 +225,6 @@ function Homepage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
 
-
   useEffect(() => {
     const fetchFilters = async () => {
       try {

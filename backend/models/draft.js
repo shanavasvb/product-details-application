@@ -13,9 +13,9 @@ const draftSchema = new mongoose.Schema({
   draftData: {
     Barcode: String,
     Product_id: String,
-    Brand_id: String,
-    Category_id: String,
-    ProductLine_id: String,
+    Brand: String,
+    Category: String,
+    ProductLine: String,
     ProductName: String,
     Description: String,
     Quantity: Number,

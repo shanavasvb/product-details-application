@@ -1,57 +1,112 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const Draft = require('../models/draft');
 const User = require('../models/User');
+const Category = require('../models/category');
+const ProductLine = require('../models/productLine');
+const Brand = require('../models/brand');
+const Product = require('../models/product'); 
+const Specification = require('../models/specefication');
+const ProductFeature = require('../models/productFeatureSchema');
+const Notification = require('../models/notifications');
 
-// GET - Get all drafts with employee info (for admin overview)
+// GET - All drafts (Admin overview)
 router.get('/', async (req, res) => {
   try {
     const drafts = await Draft.find()
-      .populate('employeeId', 'name email') 
-      .sort({ lastSaved: -1 }); // Sort by most recent first
+      .populate('employeeId', 'name email')
+      .sort({ lastSaved: -1 });
+
     res.json(drafts);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 });
 
-// GET - Get all pending drafts for admin review
+// GET - All pending drafts (Admin review)
 router.get('/admin/pending', async (req, res) => {
   try {
     const pendingDrafts = await Draft.find({ 
       saveType: 'manual',
       isPublished: false 
     })
-    .populate('employeeId', 'name email') // Populate employee details
+    .populate('employeeId', 'name email')
     .sort({ lastSaved: -1 });
-    
+
     res.json(pendingDrafts);
   } catch (error) {
-    console.error('Error loading pending drafts:', error);
     res.status(500).json({ message: 'Server error loading pending drafts', error: error.message });
   }
 });
 
-// GET - Get drafts by employee
-router.get('/employee/:employeeId', async (req, res) => {
+// GET - Drafts for a specific employee (with optional saveType filter)
+const { ObjectId } = require('mongoose').Types;
+
+router.get('/employee/:id', async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.query;
+
+  console.log('Received request for employee:', id, 'with type:', type);
+
   try {
-    const { employeeId } = req.params;
-    
-    const drafts = await Draft.find({ employeeId: employeeId })
-      .sort({ lastSaved: -1 });
-    
-    res.json(drafts);
-  } catch (error) {
-    console.error('Error loading employee drafts:', error);
-    res.status(500).json({ message: 'Server error loading employee drafts', error: error.message });
+    const query = { employeeId: new ObjectId(id) };
+    if (type) query.saveType = type;
+
+    console.log("Constructed query:", query);
+
+    const drafts = await Draft.find(query).sort({ lastSaved: -1 });
+
+    res.status(200).json(drafts);
+  } catch (err) {
+    console.error('Error fetching drafts:', err);
+    res.status(500).json({ error: 'Failed to fetch drafts', message: err.message });
   }
 });
 
-// POST - Create a new draft (by employee)
+// GET - Fetch draft by productId and employeeId (Query params)
+router.get('/fetch', async (req, res) => {
+  const { productId, employeeId } = req.query;
+
+  if (!productId || !employeeId) {
+    return res.status(400).json({ message: 'Missing productId or employeeId' });
+  }
+
+  try {
+    const draft = await Draft.findOne({ productId, employeeId }).populate('employeeId', 'name email');
+
+    if (!draft) {
+      return res.status(404).json({ message: 'Draft not found for given product and employee' });
+    }
+
+    res.json(draft);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error fetching draft', error: error.message });
+  }
+});
+
+// GET - Fetch draft by productId and employeeId (Path params, used in notifications)
+router.get('/:productId/:employeeId', async (req, res) => {
+  const { productId, employeeId } = req.params;
+
+  try {
+    const draft = await Draft.findOne({ productId, employeeId }).populate('employeeId', 'name email');
+
+    if (!draft) {
+      return res.status(404).json({ message: 'Draft not found for given product and employee' });
+    }
+
+    res.json(draft);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error fetching draft', error: error.message });
+  }
+});
+
+// POST - Create a new draft
 router.post('/', async (req, res) => {
   try {
     const { productId, employeeId, draftData, saveType } = req.body;
-    
+
     const newDraft = new Draft({
       productId,
       employeeId,
@@ -60,11 +115,18 @@ router.post('/', async (req, res) => {
       lastSaved: new Date(),
       isPublished: false
     });
-    
+
+    // when edit is saved as 'submitted', product status changes to pending 
+    if (saveType === 'submitted') {
+      await Product.findOneAndUpdate(
+        { Product_id: productId },
+        { Review_Status: 'Pending' }
+      );
+    }
+
     const savedDraft = await newDraft.save();
     res.status(201).json(savedDraft);
   } catch (error) {
-    console.error('Error creating draft:', error);
     res.status(500).json({ message: 'Server error creating draft', error: error.message });
   }
 });
@@ -74,7 +136,7 @@ router.put('/:draftId', async (req, res) => {
   try {
     const { draftId } = req.params;
     const { draftData, saveType } = req.body;
-    
+
     const updatedDraft = await Draft.findByIdAndUpdate(
       draftId,
       {
@@ -84,14 +146,21 @@ router.put('/:draftId', async (req, res) => {
       },
       { new: true }
     );
-    
+
     if (!updatedDraft) {
       return res.status(404).json({ message: 'Draft not found' });
     }
     
+    // when edit is saved as 'submitted', product status changes to pending 
+    if (saveType === 'submitted') {
+      await Product.findOneAndUpdate(
+        { Product_id: updatedDraft.productId },
+        { Review_Status: 'Pending' }
+      );
+    }
+
     res.json(updatedDraft);
   } catch (error) {
-    console.error('Error updating draft:', error);
     res.status(500).json({ message: 'Server error updating draft', error: error.message });
   }
 });
@@ -100,47 +169,84 @@ router.put('/:draftId', async (req, res) => {
 router.put('/:draftId/approve', async (req, res) => {
   try {
     const { draftId } = req.params;
-    const Product = require('../models/product'); // Adjust path as needed
-    
     const draft = await Draft.findById(draftId);
+
     if (!draft) {
       return res.status(404).json({ message: 'Draft not found' });
     }
-    
-    // Update the actual product with draft data
-    const updatedProduct = await Product.findOneAndUpdate(
-      { Product_id: draft.productId },
+
+    const draftData = draft.draftData;
+    const productId = draft.productId;
+
+    // Helper to get or create Category, Brand, ProductLine
+    const getOrCreateId = async (Model, idField, nameField, nameValue) => {
+      let existing = await Model.findOne({ [nameField]: nameValue });
+      if (!existing) {
+        const newId = `${idField}_${Date.now()}`;
+        const newEntry = new Model({ [idField]: newId, [nameField]: nameValue });
+        await newEntry.save();
+        return newId;
+      }
+      return existing[idField];
+    };
+
+    const Category_id = await getOrCreateId(Category, 'Category_id', 'Category_name', draftData.Category);
+    const Brand_id = await getOrCreateId(Brand, 'Brand_id', 'Brand_name', draftData.Brand);
+    const ProductLine_id = await getOrCreateId(ProductLine, 'ProductLine_id', 'ProductLine_name', draftData.ProductLine);
+
+    // Update or insert into products collection
+    await Product.findOneAndUpdate(
+      { Product_id: productId },
       {
-        Barcode: draft.draftData.Barcode,
-        Brand_id: draft.draftData.Brand_id,
-        Category_id: draft.draftData.Category_id,
-        ProductLine_id: draft.draftData.ProductLine_id,
-        ProductName: draft.draftData.ProductName,
-        Description: draft.draftData.Description,
-        Quantity: draft.draftData.Quantity,
-        Unit: draft.draftData.Unit,
-        Features: draft.draftData.Features,
-        Specification: draft.draftData.Specification,
-        Review_Status: 'Approved'
+        Product_id: productId,
+        ProductName: draftData.ProductName,
+        Barcode: draftData.Barcode,
+        Description: draftData.Description,
+        Quantity: draftData.Quantity,
+        Unit: draftData.Unit,
+        Review_Status: 'Approved',
+        Is_Delete: false,
+        Category_id,
+        Brand_id,
+        ProductLine_id
       },
-      { new: true }
+      { upsert: true, new: true }
     );
-    
-    if (!updatedProduct) {
-      return res.status(404).json({ message: 'Product not found' });
-    }
-    
-    // Mark draft as published
-    draft.isPublished = true;
-    await draft.save();
-    
-    res.json({ 
-      message: 'Draft approved and product updated', 
-      product: updatedProduct,
-      draft: draft 
+
+    // Update or insert features
+    await ProductFeature.findOneAndUpdate(
+      { Product_id: productId },
+      {
+        Product_id: productId,
+        Features: draftData.Features || []
+      },
+      { upsert: true, new: true }
+    );
+
+    // Update or insert specifications
+    await Specification.findOneAndUpdate(
+      { Product_id: productId },
+      {
+        Product_id: productId,
+        Specification: draftData.Specification || {}
+      },
+      { upsert: true, new: true }
+    );
+
+    // Delete the draft after approval
+    await Draft.findByIdAndDelete(draftId);
+
+    // Delete the related notification (type = 'editing')
+    await Notification.findOneAndDelete({
+      relatedId: draft.productId,
+      senderId: draft.employeeId.toString(),
+      type: 'editing'
     });
+
+    res.status(200).json({ message: 'Draft approved and product updated' });
+
   } catch (error) {
-    console.error('Error approving draft:', error);
+    console.error(error);
     res.status(500).json({ message: 'Server error approving draft', error: error.message });
   }
 });
@@ -149,42 +255,41 @@ router.put('/:draftId/approve', async (req, res) => {
 router.put('/:draftId/reject', async (req, res) => {
   try {
     const { draftId } = req.params;
-    const { rejectionReason } = req.body;
-    
+
     const draft = await Draft.findById(draftId);
     if (!draft) {
       return res.status(404).json({ message: 'Draft not found' });
     }
-    
-    // Mark as rejected but keep the record for history
-    draft.isPublished = false;
-    draft.rejectionReason = rejectionReason || 'No reason provided';
-    draft.rejectedAt = new Date();
-    await draft.save();
-    
-    res.json({ 
-      message: 'Draft rejected successfully',
-      rejectionReason: rejectionReason || 'No reason provided'
+
+    // Delete the draft
+    await Draft.findByIdAndDelete(draftId);
+
+    // Delete the related notification
+    await Notification.findOneAndDelete({
+      relatedId: draft.productId,
+      senderId: draft.employeeId.toString(),
+      type: 'editing'
     });
+
+    res.json({ message: 'Draft rejected and deleted successfully' });
   } catch (error) {
-    console.error('Error rejecting draft:', error);
+    console.error(error);
     res.status(500).json({ message: 'Server error rejecting draft', error: error.message });
   }
 });
 
-// DELETE - Delete draft by ID
+// DELETE - Delete draft
 router.delete('/:draftId', async (req, res) => {
   try {
     const { draftId } = req.params;
-    
+
     const deletedDraft = await Draft.findByIdAndDelete(draftId);
     if (!deletedDraft) {
       return res.status(404).json({ message: 'Draft not found' });
     }
-    
+
     res.json({ message: 'Draft deleted successfully' });
   } catch (error) {
-    console.error('Error deleting draft:', error);
     res.status(500).json({ message: 'Server error deleting draft', error: error.message });
   }
 });

@@ -11,6 +11,7 @@ const menuItems = [
   { label: 'Profile', path: '/profile', icon: <Users size={18} /> },
   { label: 'Trashed Products', path: '/homepage/trashed-products', icon: <Users size={18} /> },
   // { label: 'Approve Products', path: '/approve', icon: <Package size={18} /> },
+  { label: 'Approve Products', path: '/approveNotification', icon: <Package size={18} /> },
   { label: 'Draft', path: '/draft', icon: <Package size={18} /> }
 ];
 
