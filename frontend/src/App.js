@@ -242,7 +242,7 @@ function App() {
 
                                     <Route path="/homepage/:productId" element={<ProductData />} />
                                     <Route path='/approveNotification' element={<ApproveNotification />} />
-                                    <Route path='/approveNotification' element={<ApproveNotification/>}/>
+                                    {/* <Route path='/approveNotification' element={<ApproveNotification/>}/> */}
                                     <Route path="/draft-review/:id" element={<DraftReview />} />
                                     <Route path='/homepage/draft-products' element={<EmployeeDraft/>}/>
                                     <Route path='/homepage/trashed-products' element={<TrashedProductPage/>}/>
@@ -336,11 +336,6 @@ function App() {
                                         path="/draft"
                                         element={
                                             <ProtectedRoute>
-                                                <RoleBasedLayoutRoute>
-                                                    <LazyWrapper>
-                                                        <CategoryPage />
-                                                    </LazyWrapper>
-                                                </RoleBasedLayoutRoute>
 
                                             <RoleBasedLayoutRoute>
                                                 <LazyWrapper>

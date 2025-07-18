@@ -16,20 +16,17 @@ const CategoryProducts = () => {
 
   const navigate = useNavigate();
 
-  // Memoized fetch functions to prevent unnecessary re-renders
   const fetchCategoryData = useCallback(async (catId) => {
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch category name
       const categoryResponse = await axios.get(`http://localhost:5000/api/v1/category`);
       const foundCategory = categoryResponse.data.find(cat => cat.Category_id === catId);
       if (foundCategory) {
         setCategoryName(foundCategory.Category_name);
       }
 
-      // Fetch products by category
       const productsResponse = await axios.get(`http://localhost:5000/api/v1/products/by-category/${catId}`);
       setProducts(productsResponse.data);
 
@@ -47,14 +44,12 @@ const CategoryProducts = () => {
       setLoading(true);
       setError(null);
 
-      // Fetch product line name
       const productLineResponse = await axios.get(`http://localhost:5000/api/v1/productLine`);
       const foundProductLine = productLineResponse.data.find(pl => pl.ProductLine_id === plId);
       if (foundProductLine) {
         setproductLineName(foundProductLine.ProductLine_name);
       }
 
-      // Fetch products by product line
       const productsResponse = await axios.get(`http://localhost:5000/api/v1/products/by-productLine/${plId}`);
       setProducts(productsResponse.data);
 
@@ -77,12 +72,10 @@ const CategoryProducts = () => {
     }
   }, [categoryId, productLineId, fetchCategoryData, fetchProductLineData]);
 
-  // Helper function to get product name from different possible fields
   const getProductName = (product) => {
     return product.ProductName || 'Product Name Not Available';
   };
 
-  // Helper function to get description
   const getDescription = (product) => {
     return product.Description ||
       product.description ||
@@ -90,7 +83,6 @@ const CategoryProducts = () => {
       'No description available';
   };
 
-  // Helper function to get unit
   const getUnit = (product) => {
     return product.Unit ||
       product.unit ||
@@ -98,7 +90,6 @@ const CategoryProducts = () => {
       'Unit not specified';
   };
 
-  // Helper function to get quantity
   const getQuantity = (product) => {
     return product.Quantity ||
       product.quantity ||
@@ -367,7 +358,7 @@ const CategoryProducts = () => {
                 right: 0,
                 height: '4px',
                 background: isAdmin
-                  ? 'linear-gradient(90deg,rgb(81, 126, 247), #8b5cf6, rgb(231, 74, 223))'  // green gradient
+                  ? 'linear-gradient(90deg,rgb(81, 126, 247), #8b5cf6, rgb(231, 74, 223))'  
                   : 'linear-gradient(90deg, rgb(128, 203, 253), #8b5cf6, rgb(128, 203, 253))'
               }}
             ></div>

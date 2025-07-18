@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 const Product = require('../models/product');
 
-// Get all products
 router.get('/', async (req, res) => {
   try {
     const products = await Product.find();
@@ -13,10 +12,9 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get products by Category ID
 router.get('/by-category/:categoryId', async (req, res) => {
   try {
-      const categoryId = req.params.categoryId?.trim(); // trim for safet
+      const categoryId = req.params.categoryId?.trim(); 
       const products = await Product.find({
       Category_id: categoryId
       });
@@ -26,10 +24,10 @@ router.get('/by-category/:categoryId', async (req, res) => {
   }
 });
 
-// Get products by productLine ID
+
 router.get('/by-productLine/:productLineId', async (req, res) => {
   try {
-      const productLineId = req.params.productLineId?.trim(); // trim for safet
+      const productLineId = req.params.productLineId?.trim(); 
       const products = await Product.find({
       ProductLine_id: productLineId
       });
@@ -39,11 +37,10 @@ router.get('/by-productLine/:productLineId', async (req, res) => {
   }
 });
 
-// Get product by product ID
+
 router.get('/:productId', async (req, res) => {
   const { productId } = req.params;
 
-  // Validate the format of the productId
   if (!mongoose.Types.ObjectId.isValid(productId)) {
     return res.status(400).json({ message: 'Invalid product ID format' });
   }
@@ -62,7 +59,6 @@ router.get('/:productId', async (req, res) => {
   }
 });
 
-// POST /api/products/fetchByBarcode
 router.post('/api/products/fetchByBarcode', async (req, res) => {
   const { barcode } = req.body;
   try {
@@ -70,7 +66,7 @@ router.post('/api/products/fetchByBarcode', async (req, res) => {
     if (product) {
       res.json(product);
     } else {
-      res.status(404).json(null); // or { error: 'Not found' }
+      res.status(404).json(null); 
     }
   } catch (err) {
     res.status(500).json({ error: 'Server error' });

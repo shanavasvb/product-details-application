@@ -443,9 +443,14 @@ useEffect(() => {
     }
   };
 
+  // const filteredProductLines = ProductLine.filter((cat) =>
+  //   cat.ProductLine_name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
   const filteredProductLines = ProductLine.filter((cat) =>
-    cat.ProductLine_name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  typeof cat.ProductLine_name === 'string' &&
+  cat.ProductLine_name.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
 
   return (
     <div style={styles.mainContainer}>
@@ -453,7 +458,6 @@ useEffect(() => {
         <div style={styles.headerContent}>
           <div>
                      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: '2%' }}>
-                                          {/* <h1 style={styles.title}>ProductLines</h1> */}
                                           <h1 style={styles.title(isAdmin)}>ProductLines</h1>
 
                                           {isAdmin && (

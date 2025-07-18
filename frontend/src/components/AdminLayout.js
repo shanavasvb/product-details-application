@@ -9,6 +9,8 @@ const menuItems = [
   { label: 'Fetch Products', path: '/barcode-search', icon: <Upload size={18} /> },
   { label: 'Manage Employee', path: '/admin', icon: <Users size={18} /> },
   { label: 'Profile', path: '/profile', icon: <Users size={18} /> },
+  { label: 'Trashed Products', path: '/homepage/trashed-products', icon: <Users size={18} /> },
+  // { label: 'Approve Products', path: '/approve', icon: <Package size={18} /> },
   { label: 'Approve Products', path: '/approveNotification', icon: <Package size={18} /> },
   { label: 'Draft', path: '/draft', icon: <Package size={18} /> }
 ];
