@@ -34,7 +34,32 @@ const EmployeeDraft = () => {
   };
 
   if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
-  if (drafts.length === 0) return <div style={{ padding: '2rem' }}>No saved drafts found.</div>;
+  if (drafts.length === 0) {
+    return (
+      <div style={styles.container}>
+        <div style={styles.emptyState}>
+          <div style={styles.emptyIcon}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="40"
+              height="40"
+              fill="none"
+              stroke="#9ca3af"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="feather feather-file"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <h3 style={styles.emptyTitle}>No Drafts Available</h3>
+          <p style={styles.emptyText}>You haven’t saved any product drafts yet.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -58,6 +83,30 @@ const EmployeeDraft = () => {
         <h1 style={styles.title}>Draft Products</h1>
       </div>
 
+      {drafts.length === 0 ? ( 
+      <div style={styles.container}>
+        <div style={styles.emptyState}>
+          <div style={styles.emptyIcon}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="40"
+              height="40"
+              fill="none"
+              stroke="#9ca3af"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="feather feather-file"
+            >
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>
+          </div>
+          <h3 style={styles.emptyTitle}>No Drafts Available</h3>
+          <p style={styles.emptyText}>You haven’t saved any product drafts yet.</p>
+        </div>
+      </div>
+    ):(
       <div style={styles.cardsContainer}>
         {drafts.map((draft) => (
           <div key={draft._id} style={styles.card}>
@@ -99,6 +148,7 @@ const EmployeeDraft = () => {
           </div>
         ))}
       </div>
+    )}
     </div>
   );
 };
@@ -147,11 +197,37 @@ const styles = {
    marginBottom: '0.5rem',
    fontWeight: '700',
  },
- subtitle: {
-   fontSize: '1.1rem',
-   color: '#64748b',
-   margin: '0',
- },
+  subtitle: {
+     fontSize: '1.1rem',
+     color: '#64748b',
+     margin: '0',
+   },
+   emptyState: {
+    textAlign: 'center',
+    padding: '6rem 1rem',
+    color: '#6b7280',
+  },
+  emptyIcon: {
+    padding: '1rem',
+    // backgroundColor: '#f3f4f6',
+    borderRadius: '50%',
+    width: '5rem',
+    height: '5rem',
+    margin: '0 auto',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyTitle: {
+    fontSize: '1.25rem',
+    fontWeight: '500',
+    color: '#4b5563',
+    marginBottom: '0.5rem',
+  },
+  emptyText: {
+    color: '#6b7280',
+    fontSize: '0.95rem',
+  },
  cardsContainer: {
    display: 'grid',
    gridTemplateColumns: 'repeat(auto-fit, minmax(500px, 1fr))',

@@ -12,7 +12,17 @@ const productSchema = new mongoose.Schema({
   Unit: String,
   Quantity: String,
   Review_Status : String,
-  Is_Delete:Boolean
+  Is_Delete: 
+    { 
+      type : Boolean,
+      default : false  
+    },
+  Deleted_On : Date,
+  Deleted_By : {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User', //refers to the user collection to fetch the details of employee who made the edits on the product details if needesd.
+      required: false
+    },
 });
 
 module.exports = mongoose.model('products', productSchema);

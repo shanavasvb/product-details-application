@@ -1,13 +1,16 @@
+const mongoose = require('mongoose');
 const Product = require('../models/product');
 const Category = require('../models/category');
 const ProductLine = require('../models/productLine');
 const Brand = require('../models/brand');
 const ProductFeature = require('../models/productFeatureSchema');
 const Specification = require('../models/specefication');
+const User = require('../models/User');
 
 // Mark a product as deleted (soft delete)
 const markProductDeleted = async (req, res) => {
   const { id } = req.params;
+  const { userId } = req.body; 
 
   if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
     return res.status(400).json({ message: 'Invalid product ID' });
@@ -16,8 +19,11 @@ const markProductDeleted = async (req, res) => {
   try {
     const updated = await Product.findByIdAndUpdate(
       id,
-      { Is_Delete: true },
-      { new: true }
+      { Is_Delete: true,
+        Deleted_By: userId,
+        Deleted_On: new Date(),
+      },
+      { new: true, upsert: false }
     );
 
     if (!updated) {
@@ -29,7 +35,7 @@ const markProductDeleted = async (req, res) => {
     console.error('Error marking product as deleted:', error);
     res.status(500).json({ message: 'Server error' });
   }
-};
+};   
 
 // Get trashed products froom database(Is_Delete : true)
 const getTrashedProducts = async (req, res) => {
@@ -41,38 +47,36 @@ const getTrashedProducts = async (req, res) => {
     const productLineIds = trashedProducts.map(p => p.ProductLine_id);
     const brandIds = trashedProducts.map(p => p.Brand_id);
 
-    const [features, specs, categories, productLines, brands] = await Promise.all([
+    const deletedByIds = trashedProducts
+      .map(p => p.Deleted_By)
+      .filter(Boolean)
+      .map(id => new mongoose.Types.ObjectId(id));
+
+    const [features, specs, categories, productLines, brands, users] = await Promise.all([
       ProductFeature.find({ Product_id: { $in: productIds } }).lean(),
       Specification.find({ Product_id: { $in: productIds } }).lean(),
-      Category.find({ Category_id: { $in: categoryIds } }),
-      ProductLine.find({ ProductLine_id: { $in: productLineIds } }),
-      Brand.find({ Brand_id: { $in: brandIds } })
+      Category.find({ Category_id: { $in: categoryIds } }).lean(),
+      ProductLine.find({ ProductLine_id: { $in: productLineIds } }).lean(),
+      Brand.find({ Brand_id: { $in: brandIds } }).lean(),
+      User.find({ _id: { $in: deletedByIds } }).select('_id name').lean()
     ]);
 
-    // Map lookup
-    const featureMap = {};
-    features.forEach(f => { featureMap[f.Product_id] = f.Features; });
+    const featureMap = Object.fromEntries(features.map(f => [f.Product_id, f.Features]));
+    const specMap = Object.fromEntries(specs.map(s => [s.Product_id, s.Specification]));
+    const categoryMap = Object.fromEntries(categories.map(c => [c.Category_id, c.Category_name]));
+    const productLineMap = Object.fromEntries(productLines.map(p => [p.ProductLine_id, p.ProductLine_name]));
+    const brandMap = Object.fromEntries(brands.map(b => [b.Brand_id, b.Brand_name]));
+    const userMap = Object.fromEntries(users.map(u => [u._id.toString(), u.name]));
 
-    const specMap = {};
-    specs.forEach(s => { specMap[s.Product_id] = s.Specification; });
-
-    const categoryMap = {};
-    categories.forEach(c => { categoryMap[c.Category_id] = c.Category_name; });
-
-    const productLineMap = {};
-    productLines.forEach(p => { productLineMap[p.ProductLine_id] = p.ProductLine_name; });
-
-    const brandMap = {};
-    brands.forEach(b => { brandMap[b.Brand_id] = b.Brand_name; });
-
-    // get th features, specifications, category, productLine and brand of the dleted product
     const enrichedProducts = trashedProducts.map(product => ({
       ...product,
       Features: featureMap[product.Product_id] || [],
       Specification: specMap[product.Product_id] || {},
       Category_name: categoryMap[product.Category_id] || 'Unknown',
       ProductLine_name: productLineMap[product.ProductLine_id] || 'Unknown',
-      Brand_name: brandMap[product.Brand_id] || 'Unknown'
+      Brand_name: brandMap[product.Brand_id] || 'Unknown',
+      Deleted_By_Name: userMap[product.Deleted_By?.toString()] || 'Unknown',
+      Deleted_On: product.Deleted_On || null
     }));
 
     res.json(enrichedProducts);
@@ -87,10 +91,20 @@ const restoreProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { Is_Delete: false },
+      {
+        Is_Delete: false,
+        $unset: {
+          Deleted_On: 1,
+          Deleted_By: 1
+        }
+      },
       { new: true }
     );
-    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
     res.json({ message: 'Product restored successfully', product });
   } catch (error) {
     console.error('Error restoring product:', error);
@@ -166,7 +180,7 @@ const getProducts = async (req, res) => {
       name: p.ProductName,
       quantity: p.Quantity,
       unit: p.Unit,
-      // image: p.ImageURL || '', // Optional
+      // image: p.ImageURL || '', 
       Brand_name: brandMap[p.Brand_id] || '',
       Category_name: categoryMap[p.Category_id] || '',
       ProductLine_name: productLineMap[p.ProductLine_id] || '',
@@ -187,7 +201,7 @@ const getProducts = async (req, res) => {
 // Get a single product by ID
 const getProductById = async (req, res) => {
   try {
-    const product = await Product.findOne({ Product_id: req.params.id }).lean();
+    const product = await Product.findOne({ _id: req.params.id }).lean();
     if (!product) return res.status(404).json({ message: 'Product not found' });
 
     const brand = await Brand.findOne({ Brand_id: product.Brand_id });
@@ -219,11 +233,7 @@ const getProductById = async (req, res) => {
   }
 };
 
-/**
- * Search products by an array of barcodes
- * @param {Object} req - Express request object with barcodes array in body
- * @param {Object} res - Express response object
- */
+//  * Search products by an array of barcodes
 const searchByBarcodes = async (req, res) => {
   try {
     const { barcodes } = req.body;
@@ -298,11 +308,11 @@ const searchByBarcodes = async (req, res) => {
   }
 };
 
-/**
- * Get detailed product information including features and specifications
- * @param {Object} req - Express request object with product ID
- * @param {Object} res - Express response object
- */
+// /**
+//  * Get detailed product information including features and specifications
+//  * @param {Object} req - Express request object with product ID
+//  * @param {Object} res - Express response object
+//  */
 const getProductDetails = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).lean();

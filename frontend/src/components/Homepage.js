@@ -363,9 +363,9 @@ function Homepage() {
               <div 
                 key={product.id} 
                 style={styles.card} 
-                onClick={() => handleCardClick(product.id)}
+                onClick={() => handleCardClick(product._id)}
               >
-                {/* <div style={styles.image}></div> */}
+                <div style={styles.image}></div>
                 <h4 style={styles.name}>{product.name}</h4>
                 <p style={styles.quantity}>{product.quantity} {product.unit}</p>
               </div>

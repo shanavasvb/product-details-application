@@ -66,7 +66,7 @@ router.put('/:id', async (req, res) => {
     updatedFields.Brand_id = brand.Brand_id;
 
     // ---- Update Product ----
-    const updatedProduct = await Product.findOneAndUpdate({ Product_id: req.params.id },updatedFields,{ new: true });
+    const updatedProduct = await Product.findOneAndUpdate({ _id: req.params.id },updatedFields,{ new: true });
 
     if (!updatedProduct) {
       return res.status(404).json({ error: 'Product not found' });
@@ -76,20 +76,31 @@ router.put('/:id', async (req, res) => {
 
     // ---- Update or Insert Features (replace old with new) ----
     if (Array.isArray(Features)) {
-        const existing = await Feature.findOne({ Product_id: productId });
-        if (existing) {
-            // Optional: merge and remove duplicates
-            const mergedFeatures = Array.from(new Set([...existing.Features, ...Features]));
-            existing.Features = mergedFeatures;
-            await existing.save();
-        } else {
-            await new Feature({
-            Product_id: productId,
-            Features: Features
-            }).save();
-        }
-    }
+      const existing = await Feature.findOne({ Product_id: productId });
 
+      if (existing) {
+        const existingFeatures = existing.Features || [];
+
+        const updatedFeatures = [];
+
+        for (let i = 0; i < Features.length; i++) {
+          if (i < existingFeatures.length) {
+            // Replace existing feature
+            updatedFeatures.push(Features[i]);
+          } else {
+            // Add new feature
+            updatedFeatures.push(Features[i]);
+          }
+        }
+        existing.Features = updatedFeatures;
+        await existing.save();
+      } else {
+        await new Feature({
+          Product_id: productId,
+          Features: Features
+        }).save();
+      }
+    }
 
     // add or replace the specifications entered by admin
     if (SpecsObj && typeof SpecsObj === 'object') {

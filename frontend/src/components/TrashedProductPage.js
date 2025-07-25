@@ -442,6 +442,8 @@ const TrashedProductPage = () => {
                         <div style={styles.detailItem}><span style={styles.detailLabel}>Category:</span><span style={styles.detailValue}>{product.Category_name}</span></div>
                         <div style={styles.detailItem}><span style={styles.detailLabel}>Product Line:</span><span style={styles.detailValue}>{product.ProductLine_name}</span></div>
                         <div style={styles.detailItem}><span style={styles.detailLabel}>Quantity:</span><span style={styles.detailValue}>{product.Quantity} {product.Unit}</span></div>
+                        <div style={styles.detailItem}><span style={styles.detailLabel}>Deleted By:</span><span style={styles.detailValue}>{product.Deleted_By_Name}</span></div>
+                        <div style={styles.detailItem}><span style={styles.detailLabel}>Deleted On:</span><span style={styles.detailValue}>{product.Deleted_On ? new Date(product.Deleted_On).toLocaleString() : 'N/A'}</span></div>
                       </div>
                     </div>
 
