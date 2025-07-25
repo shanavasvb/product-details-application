@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { FaEdit, FaTrash, FaSave, FaSpinner } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaSave, FaImage, FaSpinner } from 'react-icons/fa';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext'; 
 import { useLocation } from 'react-router-dom';
@@ -63,51 +63,11 @@ function ProductData() {
       if (response.data) {
         setEditedProduct(response.data.draftData);
         setDraftId(response.data._id);
-        // setLastSaved(new Date(response.data.lastSaved));
       }
     } catch (err) {
       console.log('No existing draft found or error loading draft:', err);
     }
   };
-
-  // useEffect(() => {
-  //   if (isEditing && !isAdmin && userId && Object.keys(editedProduct).length > 0) {
-  //     const autoSaveTimer = setTimeout(() => {
-  //       autoSaveDraft();
-  //     }, 2000); 
-
-  //     return () => clearTimeout(autoSaveTimer);
-  //   }
-  // }, [editedProduct, isEditing, isAdmin, userId]);
-
-  // const autoSaveDraft = async () => {
-  //   if (!userId || isAdmin || Object.keys(editedProduct).length === 0) return;
-    
-  //   setIsAutoSaving(true);
-  //   try {
-  //     const draftData = {
-  //       productId: productId,
-  //       employeeId: userId,
-  //       draftData: { ...editedProduct }, 
-  //       saveType: 'auto'
-  //     };
-
-  //     console.log('Saving draft data:', draftData); 
-
-  //     if (draftId) {
-  //       await axios.put(`http://localhost:5000/api/v1/draft/${draftId}`, draftData);
-  //     } else {
-  //       const response = await axios.post('http://localhost:5000/api/v1/draft', draftData);
-  //       setDraftId(response.data._id);
-  //     }
-      
-  //     setLastSaved(new Date());
-  //   } catch (err) {
-  //     console.error('Auto-save failed:', err);
-  //   } finally {
-  //     setIsAutoSaving(false);
-  //   }
-  // };
 
   const handleEditClick = () => setIsEditing(true);
 
@@ -169,25 +129,12 @@ const handleSaveClick = async () => {
   const confirmDelete = window.confirm('Are you sure you want to delete this product?');
   if (!confirmDelete) return;
 
-  console.log("=== PRODUCT DEBUG INFO ===");
-  console.log("Full product object:", product);
-  console.log("Product type:", typeof product);
-  console.log("Product is null/undefined:", product == null);
-  
   if (product) {
     console.log("All product keys:", Object.keys(product));
     console.log("All product entries:", Object.entries(product));
     console.log("Product as JSON:", JSON.stringify(product, null, 2));
   }
   
-  console.log("Product._id (MongoDB ObjectId):", product?._id);
-  console.log("Product.id (Custom Product_id):", product?.id);
-  console.log("Product.Product_id:", product?.Product_id);
-  console.log("Product.productId:", product?.productId);
-  console.log("Product.product_id:", product?.product_id);
-  console.log("Product.ID:", product?.ID);
-  console.log("=== END DEBUG INFO ===");
-
   let productId = product?._id;
   
   if (!productId && product?.id) {
@@ -210,9 +157,6 @@ const handleSaveClick = async () => {
   }
 
   const productIdString = String(productId).trim();
-  console.log("Using productId:", productIdString);
-  console.log("Type of productId:", typeof productIdString);
-  console.log("Length of productId:", productIdString.length);
 
   const objectIdRegex = /^[0-9a-fA-F]{24}$/;
   const isValidObjectId = objectIdRegex.test(productIdString);
@@ -225,9 +169,12 @@ const handleSaveClick = async () => {
   }
 
   try {
-    console.log("Making DELETE request to:", `http://localhost:5000/api/v1/product/mark-deleted/${productIdString}`);
-    
-    const response = await axios.put(`http://localhost:5000/api/v1/product/mark-deleted/${productIdString}`);
+     console.log("Making DELETE request to:", `http://localhost:5000/api/v1/product/mark-deleted/${productIdString}`);
+
+     const response = await axios.put(`http://localhost:5000/api/v1/product/mark-deleted/${productIdString}`, {
+        userId: userId
+     });
+
     console.log("Delete response:", response.data);
     alert('Product deleted successfully.');
     window.history.back();
@@ -352,20 +299,6 @@ const handleSaveClick = async () => {
         )}
 
         <div style={styles.headerActions}>
-          {/* {!isAdmin && isEditing && ( //display the last auto save time
-            <div style={styles.autoSaveStatus}>
-              {isAutoSaving ? (
-                <span style={styles.autoSaveText}>
-                  <FaSpinner style={{ ...styles.spinnerIcon, animation: 'spin 1s linear infinite' }} />
-                  Auto-saving...
-                </span>
-              ) : lastSaved ? (
-                <span style={styles.autoSaveText}>
-                  Last saved: {lastSaved.toLocaleTimeString()}
-                </span>
-              ) : null}
-            </div>
-          )} */}
           
           {isEditing ? (
           <>
@@ -419,6 +352,23 @@ const handleSaveClick = async () => {
       <div style={styles.card}>
         <div style={styles.productInfo}>
           <div style={styles.section}>
+
+            {/* Image Section
+            <div style={styles.imageSection}>
+              <label style={styles.label}>Product Image</label>
+              <div style={styles.imageContainer}>
+                <div style={styles.imagePlaceholder}>
+                  <FaImage style={styles.imageIcon} />
+                  <span style={styles.imageText}>No image available</span>
+                </div>
+                {isEditing && (
+                  <button style={styles.imageEditButton}>
+                    <FaEdit style={styles.editIcon} />
+                  </button>
+                )}
+              </div>
+            </div> */}
+
             <div style={styles.detailsGrid}>
               {/* Category Section*/}
               <div style={styles.gridItem}>
@@ -476,13 +426,18 @@ const handleSaveClick = async () => {
                       onChange={(e) => setEditedProduct({ ...editedProduct, Quantity: e.target.value })}
                       style={styles.quantityInput}
                     />
-                    <input
-                      type="text"
+                    <select
                       value={editedProduct.Unit || ''}
                       onChange={(e) => setEditedProduct({ ...editedProduct, Unit: e.target.value })}
                       style={styles.unitInput}
-                      placeholder="Unit"
-                    />
+                    >
+                      <option value="" disabled>Select Unit</option>
+                      <option value="gm">gm</option>
+                      <option value="kg">kg</option>
+                      <option value="ml">ml</option>
+                      <option value="pc">pc</option>
+                      <option value="sticks">sticks</option>
+                    </select>
                   </div>
                 ) : (
                   <p style={styles.value}>{`${product.Quantity} ${product.Unit}`}</p>
@@ -492,7 +447,7 @@ const handleSaveClick = async () => {
                   {/* BArcode Section*/}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Barcode</label>
-                {isEditing ? (
+                {/* {isEditing ? (
                   <input
                     type="text"
                     value={editedProduct.Barcode || ''}
@@ -501,7 +456,8 @@ const handleSaveClick = async () => {
                   />
                 ) : (
                   <p style={styles.barcodeValue}>{product.Barcode}</p>
-                )}
+                )} */}
+                <p style={styles.barcodeValue}>{product.Barcode}</p>
               </div>
             </div>
           </div>
@@ -657,6 +613,56 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'flex-end',
     gap: '0.3rem'
+  },
+  // imageSection: {
+  // marginBottom: '2rem',
+  // paddingBottom: '1.5rem',
+  // borderBottom: '1px solid #f0f0f0'
+  // },
+  // imageContainer: {
+  // position: 'relative',
+  // width: '200px',
+  // height: '200px',
+  // border: '2px dashed #ddd',
+  // borderRadius: '8px',
+  // display: 'flex',
+  // flexDirection: 'column',
+  // alignItems: 'center',
+  // justifyContent: 'center',
+  // backgroundColor: '#f8f9fa'
+  // },
+  // imagePlaceholder: {
+  // display: 'flex',
+  // flexDirection: 'column',
+  // alignItems: 'center',
+  // gap: '0.5rem'
+  // },
+  // imageIcon: {
+  // fontSize: '3rem',
+  // color: '#ccc'
+  // },
+  // imageText: {
+  // fontSize: '0.9rem',
+  // color: '#666'
+  // },
+  // imageEditButton: {
+  // position: 'absolute',
+  // top: '8px',
+  // right: '8px',
+  // width: '32px',
+  // height: '32px',
+  // backgroundColor: '#3498db',
+  // color: 'white',
+  // border: 'none',
+  // borderRadius: '50%',
+  // cursor: 'pointer',
+  // display: 'flex',
+  // alignItems: 'center',
+  // justifyContent: 'center',
+  // boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+  // },
+  editIcon: {
+    fontSize: '0.8rem'
   },
   header: {
     display: 'flex',

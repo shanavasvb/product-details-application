@@ -293,7 +293,7 @@ const EmployeeLayoutWithHover = ({ children }) => {
             </ul>
           </div>
 
-          <div style={styles.userSection}>
+          {/* <div style={styles.userSection}>
             <div style={styles.userAvatar}>
               <FaUserCircle size={32} />
             </div>
@@ -301,7 +301,7 @@ const EmployeeLayoutWithHover = ({ children }) => {
               <div style={styles.userName}>{user.name}</div>
               <div style={styles.userRole}>{user.role}</div>
             </div>
-          </div>
+          </div> */}
         </div>
       )}
 
@@ -327,9 +327,9 @@ const EmployeeLayoutWithHover = ({ children }) => {
             >
               <FaHome size={18} />
             </button>
-            <button title="Profile" style={styles.headerBtn} data-header-btn>
+            {/* <button title="Profile" style={styles.headerBtn} data-header-btn>
               <FaUserCircle size={18} />
-            </button>
+            </button> */}
           </div>
         </div>
 
