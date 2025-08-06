@@ -116,12 +116,19 @@ router.post('/', async (req, res) => {
       isPublished: false
     });
 
-    // when edit is saved as 'submitted', product status changes to pending 
+    // when edit is saved as 'submitted', product status changes to pending by comparing using barcode or product id
     if (saveType === 'submitted') {
-      await Product.findOneAndUpdate(
+      const updated = await Product.findOneAndUpdate(
         { Product_id: productId },
         { Review_Status: 'Pending' }
       );
+
+      if (!updated && draftData?.Barcode) {
+        await Product.findOneAndUpdate(
+          { Barcode: draftData.Barcode },
+          { Review_Status: 'Pending' }
+        );
+      }
     }
 
     const savedDraft = await newDraft.save();
@@ -151,13 +158,23 @@ router.put('/:draftId', async (req, res) => {
       return res.status(404).json({ message: 'Draft not found' });
     }
     
-    // when edit is saved as 'submitted', product status changes to pending 
+    // when edit is saved as 'submitted', product status changes to pending by comparing using barcode or product id
     if (saveType === 'submitted') {
-      await Product.findOneAndUpdate(
+      const draftData = updatedDraft.draftData;
+
+      const updated = await Product.findOneAndUpdate(
         { Product_id: updatedDraft.productId },
         { Review_Status: 'Pending' }
       );
+
+      if (!updated && draftData?.Barcode) {
+        await Product.findOneAndUpdate(
+          { Barcode: draftData.Barcode },
+          { Review_Status: 'Pending' }
+        );
+      }
     }
+
 
     res.json(updatedDraft);
   } catch (error) {
@@ -176,7 +193,16 @@ router.put('/:draftId/approve', async (req, res) => {
     }
 
     const draftData = draft.draftData;
-    const productId = draft.productId;
+    const barcode = draftData.Barcode;
+
+    // Find existing product by barcode
+    const existingProduct = await Product.findOne({ Barcode: barcode });
+
+    if (!existingProduct) {
+      return res.status(404).json({ message: 'No product found with matching barcode' });
+    }
+
+    const productId = existingProduct.Product_id;
 
     // Helper to get or create Category, Brand, ProductLine
     const getOrCreateId = async (Model, idField, nameField, nameValue) => {
@@ -194,7 +220,7 @@ router.put('/:draftId/approve', async (req, res) => {
     const Brand_id = await getOrCreateId(Brand, 'Brand_id', 'Brand_name', draftData.Brand);
     const ProductLine_id = await getOrCreateId(ProductLine, 'ProductLine_id', 'ProductLine_name', draftData.ProductLine);
 
-    // Update or insert into products collection
+    // Update product
     await Product.findOneAndUpdate(
       { Product_id: productId },
       {
@@ -204,7 +230,7 @@ router.put('/:draftId/approve', async (req, res) => {
         Description: draftData.Description,
         Quantity: draftData.Quantity,
         Unit: draftData.Unit,
-        Review_Status: 'Approved',
+        Review_Status: 'Reviewed',
         Is_Delete: false,
         Category_id,
         Brand_id,
@@ -236,14 +262,14 @@ router.put('/:draftId/approve', async (req, res) => {
     // Delete the draft after approval
     await Draft.findByIdAndDelete(draftId);
 
-    // Delete the related notification (type = 'editing')
+    // Delete the related notification
     await Notification.findOneAndDelete({
       relatedId: draft.productId,
       senderId: draft.employeeId.toString(),
       type: 'editing'
     });
 
-    res.status(200).json({ message: 'Draft approved and product updated' });
+    res.status(200).json({ message: 'Draft approved and product updated by barcode match' });
 
   } catch (error) {
     console.error(error);
@@ -278,19 +304,47 @@ router.put('/:draftId/reject', async (req, res) => {
   }
 });
 
-// DELETE - Delete draft
-router.delete('/:draftId', async (req, res) => {
+// PUT - Reject draft
+router.put('/:draftId/reject', async (req, res) => {
   try {
     const { draftId } = req.params;
 
-    const deletedDraft = await Draft.findByIdAndDelete(draftId);
-    if (!deletedDraft) {
+    const draft = await Draft.findById(draftId);
+    if (!draft) {
       return res.status(404).json({ message: 'Draft not found' });
     }
 
-    res.json({ message: 'Draft deleted successfully' });
+    const draftData = draft.draftData;
+    const barcode = draftData.Barcode;
+
+    // Find existing product by barcode
+    const existingProduct = await Product.findOne({ Barcode: barcode });
+    if (!existingProduct) {
+      return res.status(404).json({ message: 'No product found with matching barcode' });
+    }
+
+    const productId = existingProduct.Product_id;
+
+    // Update the product's Review_Status to "Reviewed"
+    await Product.findOneAndUpdate(
+      { Product_id: productId },
+      { Review_Status: "Reviewed" }
+    );
+
+    // Delete the draft
+    await Draft.findByIdAndDelete(draftId);
+
+    // Delete the related notification
+    await Notification.findOneAndDelete({
+      relatedId: draft.productId,
+      senderId: draft.employeeId.toString(),
+      type: 'editing'
+    });
+
+    res.json({ message: 'Draft rejected, product marked as Reviewed, and draft/notification deleted successfully' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error deleting draft', error: error.message });
+    console.error(error);
+    res.status(500).json({ message: 'Server error rejecting draft', error: error.message });
   }
 });
 
