@@ -437,6 +437,29 @@ const handleSaveClick = async () => {
                       <option value="ml">ml</option>
                       <option value="pc">pc</option>
                       <option value="sticks">sticks</option>
+                      <option value="unit">unit</option>
+                      <option value="pack">pack</option>
+                      <option value="dozen">dozen</option>
+                      <option value="pair">pair</option>
+                      <option value="set">set</option>
+                      <option value="roll">roll</option>
+                      <option value="bottle">bottle</option>
+                      <option value="box">box</option>
+                      <option value="tube">tube</option>
+                      <option value="tube">ounce</option>
+                      <option value="mm">mm</option>
+                      <option value="cm">cm</option>
+                      <option value="m">m</option>
+                      <option value="inch">inch</option>
+                      <option value="ft">ft</option>
+                      <option value="bar">bar</option>
+                      <option value="sheet">sheet</option>
+                      <option value="tablet">tablet</option>
+                      <option value="capsule">capsule</option> 
+                      <option value="spray">spray</option>
+                      <option value="serving">serving</option>
+                      <option value="slice">slice</option>
+                      <option value="cup">cup</option>
                     </select>
                   </div>
                 ) : (
@@ -485,16 +508,28 @@ const handleSaveClick = async () => {
                 {(editedProduct.Features || []).map((feature, index) => (
                   <div key={index} style={styles.featureCard}>
                     {isEditing ? (
-                      <input
-                        type="text"
-                        value={feature}
-                        onChange={(e) => {
-                          const newFeatures = [...(editedProduct.Features || [])];
-                          newFeatures[index] = e.target.value;
-                          setEditedProduct({ ...editedProduct, Features: newFeatures });
-                        }}
-                        style={styles.featureInput}
-                      />
+                      <div style={styles.featureEditWrapper}>
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={(e) => {
+                            const newFeatures = [...(editedProduct.Features || [])];
+                            newFeatures[index] = e.target.value;
+                            setEditedProduct({ ...editedProduct, Features: newFeatures });
+                          }}
+                            style={styles.featureInput}
+                        />
+                        <button
+                          onClick={() => {
+                            const updatedFeatures = (editedProduct.Features || []).filter((_, i) => i !== index);
+                            setEditedProduct({ ...editedProduct, Features: updatedFeatures });
+                          }}
+                          style={styles.deleteFeatureButton}
+                          title="Delete Feature"
+                        >
+                          <FaTrash style={{ fontSize: '0.8rem' }} />
+                        </button>
+                      </div>
                     ) : (
                       <div style={styles.featureContent}>
                         <div style={styles.featureIcon}>✓</div>
@@ -503,6 +538,7 @@ const handleSaveClick = async () => {
                     )}
                   </div>
                 ))}
+
                 {isEditing && (
                   <button
                     onClick={() => {
@@ -614,6 +650,23 @@ const styles = {
     alignItems: 'flex-end',
     gap: '0.3rem'
   },
+  featureEditWrapper: {
+  display: 'flex',
+  alignItems: 'center',
+  gap: '0.5rem'
+},
+deleteFeatureButton: {
+  backgroundColor: '#dc3545',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '4px',
+  padding: '0.4rem 0.6rem',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  transition: 'background-color 0.2s ease'
+},
   // imageSection: {
   // marginBottom: '2rem',
   // paddingBottom: '1.5rem',
@@ -821,7 +874,8 @@ const styles = {
     borderRadius: '4px',
     fontSize: '1rem',
     backgroundColor: 'white',
-    width: '125px'
+    width: '125px',
+    appearance : 'auto'
   },
   input: {
     padding: '0.6rem',
@@ -841,7 +895,7 @@ const styles = {
     resize: 'vertical',
     minHeight: '100px',
     fontFamily: 'inherit',
-    lineHeight: '1.5'
+    lineHeight: '1.5',
   },
   featuresGrid: {
     display: 'grid',
