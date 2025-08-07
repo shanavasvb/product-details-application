@@ -85,7 +85,7 @@ router.get('/fetch', async (req, res) => {
   }
 });
 
-// GET - Fetch draft by productId and employeeId (Path params, used in notifications)
+// GET - Fetch draft by productId and employeeId (used in notifications)
 router.get('/:productId/:employeeId', async (req, res) => {
   const { productId, employeeId } = req.params;
 

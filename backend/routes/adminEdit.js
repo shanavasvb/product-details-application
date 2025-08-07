@@ -41,7 +41,7 @@ router.put('/:id', async (req, res) => {
     }
     updatedFields.Category_id = category.Category_id;
 
-    // ---- Resolve or Create Product Line ----
+    //Resolve or Create Product Line
     let productLine = await ProductLineModel.findOne({ ProductLine_name: ProductLine });
     if (!productLine) {
       const latest = await ProductLineModel.findOne().sort({ ProductLine_id: -1 });
@@ -55,7 +55,7 @@ router.put('/:id', async (req, res) => {
     }
     updatedFields.ProductLine_id = productLine.ProductLine_id;
 
-    // ---- Resolve or Create Brand ----
+    // Resolve or Create Brand 
     let brand = await Brand.findOne({ Brand_name: BrandName });
     if (!brand) {
       const latest = await Brand.findOne().sort({ Brand_id: -1 });
@@ -65,7 +65,7 @@ router.put('/:id', async (req, res) => {
     }
     updatedFields.Brand_id = brand.Brand_id;
 
-    // ---- Update Product ----
+    // Update Product 
     const updatedProduct = await Product.findOneAndUpdate({ _id: req.params.id },updatedFields,{ new: true });
 
     if (!updatedProduct) {
@@ -74,7 +74,7 @@ router.put('/:id', async (req, res) => {
 
     const productId = updatedProduct.Product_id;
 
-    // ---- Update or Insert Features (replace old with new) ----
+    //  Update or Insert Features (replace old with new) 
     if (Array.isArray(Features)) {
       const existing = await Feature.findOne({ Product_id: productId });
 
@@ -102,7 +102,7 @@ router.put('/:id', async (req, res) => {
       }
     }
 
-    // add or replace the specifications entered by admin
+    // add or replace the specifications 
     if (SpecsObj && typeof SpecsObj === 'object') {
         let existingSpec = await Specification.findOne({ Product_id: productId });
 
