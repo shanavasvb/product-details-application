@@ -245,7 +245,7 @@ function App() {
                                     {/* <Route path='/approveNotification' element={<ApproveNotification/>}/> */}
                                     <Route path="/draft-review/:id" element={<DraftReview />} />
                                     <Route path='/homepage/draft-products' element={<EmployeeDraft/>}/>
-                                    <Route path='/homepage/trashed-products' element={<TrashedProductPage/>}/>
+                                    <Route path='/homepage/trashed-products' element={<RoleBasedLayoutRoute><TrashedProductPage /></RoleBasedLayoutRoute>}/>
 
                                     {/* Auth routes */}
                                     <Route path="/login" element={<Login />} />
@@ -393,7 +393,9 @@ function App() {
                                     /> */}
 
 
-                                    <Route path="/barcode-search" element={<BarcodeSearch />} />
+                                    <Route path="/barcode-search" element={<ProtectedRoute><RoleBasedLayoutRoute><BarcodeSearch />
+                                    </RoleBasedLayoutRoute>
+                                        </ProtectedRoute>} />
 
                                     {/* <Route path="/barcode-search" element={<BarcodeSearch />} /> */}
 
