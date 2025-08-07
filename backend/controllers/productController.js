@@ -233,7 +233,7 @@ const getProductById = async (req, res) => {
   }
 };
 
-//  * Search products by an array of barcodes
+// Search products by an array of barcodes
 const searchByBarcodes = async (req, res) => {
   try {
     const { barcodes } = req.body;
@@ -308,11 +308,6 @@ const searchByBarcodes = async (req, res) => {
   }
 };
 
-// /**
-//  * Get detailed product information including features and specifications
-//  * @param {Object} req - Express request object with product ID
-//  * @param {Object} res - Express response object
-//  */
 const getProductDetails = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id).lean();

@@ -55,8 +55,7 @@ const TrashedProductPage = () => {
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)',
       transition: 'all 0.3s ease',
       textDecoration: 'none'
-    },
-    // backButtonHover: {
+    },    // backButtonHover: {
     //   backgroundColor: '#e5e7eb',
     //   color: '#000000',
     //   transform: 'translateY(-2px)',
