@@ -42,20 +42,7 @@ const Profile = () => {
                 justifyContent: 'space-between',
                 alignItems: 'center'
             }}>
-                <div>
-                    <Title level={3} style={{ margin: 0, color: '#1890ff' }}>
-                        {user?.is_admin ? 'Admin' : 'Employee'} Dashboard
-                    </Title>
-                </div>
-                <Space>
-                    <Text>Welcome, {user?.name}</Text>
-                    <Button
-                        icon={<LogoutOutlined />}
-                        onClick={handleLogout}
-                    >
-                        Logout
-                    </Button>
-                </Space>
+                
             </Header>
 
             <Content style={{ padding: '24px' }}>

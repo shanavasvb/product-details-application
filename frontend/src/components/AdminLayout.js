@@ -10,7 +10,6 @@ const menuItems = [
   { label: 'Manage Employee', path: '/admin', icon: <Users size={18} /> },
   { label: 'Profile', path: '/profile', icon: <Users size={18} /> },
   { label: 'Trashed Products', path: '/homepage/trashed-products', icon: <Users size={18} /> },
-  // { label: 'Approve Products', path: '/approve', icon: <Package size={18} /> },
   { label: 'Approve Products', path: '/approveNotification', icon: <Package size={18} /> },
   { label: 'Draft', path: '/draft', icon: <Package size={18} /> }
 ];
@@ -20,6 +19,30 @@ function AdminLayout({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const activePath = location.pathname;
+
+  // Proper logout function
+  const handleLogout = () => {
+    try {
+      // Clear all stored user data
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('authToken');
+
+      // Clear sessionStorage as well
+      sessionStorage.clear();
+
+      // Navigate to login page
+      navigate('/login', { replace: true });
+
+      // Optional: Show success message
+      console.log('User logged out successfully');
+
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Still navigate to login even if there's an error
+      navigate('/login', { replace: true });
+    }
+  };
 
   const layoutContainerStyle = {
     display: 'flex',
@@ -79,6 +102,7 @@ function AdminLayout({ children }) {
     display: 'flex',
     flex: 1
   };
+
   const menuListStyle = {
     listStyle: 'none',
     padding: '1rem 0',
@@ -110,26 +134,45 @@ function AdminLayout({ children }) {
     boxShadow: activePath === path ? '0 2px 4px rgba(147, 51, 234, 0.2)' : 'none'
   });
 
-  const profileButtonStyle = {
-    // background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
-    border: 'none',
-    color: 'white',
-    cursor: 'pointer',
-    fontSize: '1.2rem',
-    borderRadius: '50%',
-    width: '42px',
-    height: '42px',
+  // Special logout button style
+  const getLogoutStyle = () => ({
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: '0.75rem',
+    padding: '0.875rem 1rem',
+    color: '#dc2626',
+    backgroundColor: 'transparent',
+    cursor: 'pointer',
+    fontSize: '0.95rem',
+    fontWeight: '500',
+    border: 'none',
+    width: '100%',
+    textAlign: 'left',
     transition: 'all 0.2s ease',
-    boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
-  };
+    borderRadius: '8px',
+    textDecoration: 'none'
+  });
 
   const logoutSectionStyle = {
     borderTop: '1px solid #e5e7eb',
     paddingTop: '1rem',
     marginTop: '1rem'
+  };
+
+  // Logout button in navbar
+  const navbarLogoutStyle = {
+    background: 'linear-gradient(135deg, #dc2626, #ef4444)',
+    border: 'none',
+    color: 'white',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    borderRadius: '8px',
+    padding: '0.5rem 1rem',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.5rem',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 2px 4px rgba(220, 38, 38, 0.3)'
   };
 
   return (
@@ -144,10 +187,10 @@ function AdminLayout({ children }) {
           >
             <Menu size={22} />
           </button>
-          <h1 style={{ 
-            margin: 0, 
-            fontSize: '1.5rem', 
-            fontWeight: '700', 
+          <h1 style={{
+            margin: 0,
+            fontSize: '1.5rem',
+            fontWeight: '700',
             color: ' #7c3aed',
             background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
             WebkitBackgroundClip: 'text',
@@ -157,25 +200,30 @@ function AdminLayout({ children }) {
             Admin Panel
           </h1>
         </div>
-        <button
-          style={profileButtonStyle}
-          onClick={() => navigate('/profile')}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'scale(1.05)';
-            e.target.style.boxShadow = '0 4px 12px rgba(79, 70, 229, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'scale(1)';
-            e.target.style.boxShadow = '0 2px 8px rgba(79, 70, 229, 0.3)';
-          }}
-        >
-          👤
-        </button>
+
+        {/* Only logout button in navbar - profile icon removed */}
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <button
+            style={navbarLogoutStyle}
+            onClick={handleLogout}
+            onMouseEnter={(e) => {
+              e.target.style.transform = 'scale(1.05)';
+              e.target.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.4)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.transform = 'scale(1)';
+              e.target.style.boxShadow = '0 2px 4px rgba(220, 38, 38, 0.3)';
+            }}
+          >
+            <LogOut size={16} />
+            Logout
+          </button>
+        </div>
       </nav>
 
       <div style={mainStyle}>
         {/* Sidebar */}
-        <aside style={sidebarStyle}> 
+        <aside style={sidebarStyle}>
           <ul style={menuListStyle}>
             {menuItems.map(({ label, path, icon }) => (
               <li key={path} style={menuItemStyle}>
@@ -204,25 +252,21 @@ function AdminLayout({ children }) {
                 </button>
               </li>
             ))}
-            
-            {/* Logout section */}
+
+            {/* Logout section in sidebar */}
             <li style={{ ...menuItemStyle, ...logoutSectionStyle }}>
               <button
-                style={getLinkStyle('/login')}
-                onClick={() => navigate('/login')}
+                style={getLogoutStyle()}
+                onClick={handleLogout}
                 onMouseEnter={(e) => {
-                  if (activePath !== '/login') {
-                    e.target.style.backgroundColor = ' #fef2f2';
-                    e.target.style.color = ' #dc2626';
-                    e.target.style.transform = 'translateX(4px)';
-                  }
+                  e.target.style.backgroundColor = '#fef2f2';
+                  e.target.style.color = '#b91c1c';
+                  e.target.style.transform = 'translateX(4px)';
                 }}
                 onMouseLeave={(e) => {
-                  if (activePath !== '/login') {
-                    e.target.style.backgroundColor = 'transparent';
-                    e.target.style.color = ' #4b5563';
-                    e.target.style.transform = 'translateX(0)';
-                  }
+                  e.target.style.backgroundColor = 'transparent';
+                  e.target.style.color = '#dc2626';
+                  e.target.style.transform = 'translateX(0)';
                 }}
               >
                 <span style={{ display: 'flex', alignItems: 'center' }}>

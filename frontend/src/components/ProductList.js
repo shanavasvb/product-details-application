@@ -10,7 +10,10 @@ import {
     Image,
     Spin,
     Tag,
-    Divider
+    Divider,
+    Checkbox,
+    message,
+    Affix
 } from 'antd';
 import {
     EyeOutlined,
@@ -19,7 +22,9 @@ import {
     TagOutlined,
     AppstoreOutlined,
     ShopOutlined,
-    InboxOutlined
+    InboxOutlined,
+    DatabaseOutlined,
+    SelectOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
 
@@ -31,6 +36,10 @@ const ProductList = ({ products }) => {
     const [fullProductDetails, setFullProductDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const [syncLoading, setSyncLoading] = useState(false);
+
+    // New state for bulk selection
+    const [selectedProducts, setSelectedProducts] = useState([]);
+    const [selectMode, setSelectMode] = useState(false);
 
     const showProductDetails = async (product) => {
         setSelectedProduct(product);
@@ -49,22 +58,54 @@ const ProductList = ({ products }) => {
         }
     };
 
-    const handleSync = (product) => {
+    // Handle individual product selection
+    const handleProductSelect = (product, checked) => {
+        if (checked) {
+            setSelectedProducts(prev => [...prev, product]);
+        } else {
+            setSelectedProducts(prev => prev.filter(p => p._id !== product._id));
+        }
+    };
+
+    // Handle select all functionality
+    const handleSelectAll = (checked) => {
+        if (checked) {
+            setSelectedProducts([...products]);
+        } else {
+            setSelectedProducts([]);
+        }
+    };
+
+    // Handle bulk sync
+    const handleBulkSync = async () => {
+        if (selectedProducts.length === 0) {
+            message.warning('Please select at least one product to sync');
+            return;
+        }
+
         setSyncLoading(true);
 
-        // This is a placeholder for the sync functionality
-        setTimeout(() => {
+        try {
+            // Replace this with your actual sync API call
+            // const response = await axios.post('/api/v1/products/bulk-sync', {
+            //     productIds: selectedProducts.map(p => p._id)
+            // });
+
+            // Simulate API call
+            await new Promise(resolve => setTimeout(resolve, 2000));
+
+            message.success(`Successfully synced ${selectedProducts.length} product(s) to database`);
+
+            // Clear selection after successful sync
+            setSelectedProducts([]);
+            setSelectMode(false);
+
+        } catch (error) {
+            console.error('Error syncing products:', error);
+            message.error('Failed to sync products to database');
+        } finally {
             setSyncLoading(false);
-            Modal.success({
-                title: 'Sync Placeholder',
-                content: (
-                    <div>
-                        <p>This is a placeholder for the sync functionality.</p>
-                        <p>Product "{product.name}" would be synced to database.</p>
-                    </div>
-                ),
-            });
-        }, 1500);
+        }
     };
 
     const handleCloseModal = () => {
@@ -73,8 +114,60 @@ const ProductList = ({ products }) => {
         setFullProductDetails(null);
     };
 
+    const toggleSelectMode = () => {
+        setSelectMode(!selectMode);
+        if (selectMode) {
+            setSelectedProducts([]);
+        }
+    };
+
+    const isProductSelected = (product) => {
+        return selectedProducts.some(p => p._id === product._id);
+    };
+
     return (
         <>
+            {/* Bulk Action Controls */}
+            <div style={{
+                marginBottom: 16,
+                padding: '12px 16px',
+                background: '#fafafa',
+                borderRadius: '6px',
+                border: '1px solid #e8e8e8'
+            }}>
+                <Space wrap>
+                    <Button
+                        type={selectMode ? "primary" : "default"}
+                        icon={<SelectOutlined />}
+                        onClick={toggleSelectMode}
+                    >
+                        {selectMode ? 'Cancel Selection' : 'Select Products'}
+                    </Button>
+
+                    {selectMode && (
+                        <>
+                            <Checkbox
+                                indeterminate={selectedProducts.length > 0 && selectedProducts.length < products.length}
+                                checked={selectedProducts.length === products.length && products.length > 0}
+                                onChange={(e) => handleSelectAll(e.target.checked)}
+                            >
+                                Select All ({selectedProducts.length}/{products.length})
+                            </Checkbox>
+
+                            <Button
+                                type="primary"
+                                icon={<DatabaseOutlined />}
+                                loading={syncLoading}
+                                disabled={selectedProducts.length === 0}
+                                onClick={handleBulkSync}
+                            >
+                                Sync {selectedProducts.length > 0 ? `(${selectedProducts.length})` : ''} to Database
+                            </Button>
+                        </>
+                    )}
+                </Space>
+            </div>
+
             <List
                 grid={{
                     gutter: 16,
@@ -89,43 +182,64 @@ const ProductList = ({ products }) => {
                 renderItem={(product) => (
                     <List.Item>
                         <Card
-                            hoverable
+                            hoverable={!selectMode}
                             style={{
                                 borderRadius: '8px',
-                                overflow: 'hidden'
+                                overflow: 'hidden',
+                                border: selectMode && isProductSelected(product) ? '2px solid #1890ff' : undefined,
+                                position: 'relative'
                             }}
                             cover={
-                                product.imageUrl ? (
-                                    <div style={{
-                                        height: '200px',
-                                        overflow: 'hidden',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        background: '#f5f5f5'
-                                    }}>
-                                        <img
-                                            alt={product.name}
-                                            src={product.imageUrl}
-                                            style={{
-                                                maxWidth: '100%',
-                                                maxHeight: '100%',
-                                                objectFit: 'contain'
-                                            }}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div style={{
-                                        height: '200px',
-                                        display: 'flex',
-                                        justifyContent: 'center',
-                                        alignItems: 'center',
-                                        background: '#f5f5f5'
-                                    }}>
-                                        <InboxOutlined style={{ fontSize: '64px', color: '#d9d9d9' }} />
-                                    </div>
-                                )
+                                <div style={{ position: 'relative' }}>
+                                    {selectMode && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: 8,
+                                            left: 8,
+                                            zIndex: 1,
+                                            background: 'rgba(255, 255, 255, 0.9)',
+                                            borderRadius: '4px',
+                                            padding: '4px'
+                                        }}>
+                                            <Checkbox
+                                                checked={isProductSelected(product)}
+                                                onChange={(e) => handleProductSelect(product, e.target.checked)}
+                                            />
+                                        </div>
+                                    )}
+                                    {product.imageUrl ? (
+                                        <div style={{
+                                            height: '200px',
+                                            overflow: 'hidden',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            background: '#f5f5f5'
+                                        }}>
+                                            <img
+                                                alt={product.name}
+                                                src={product.imageUrl}
+                                                style={{
+                                                    maxWidth: '100%',
+                                                    maxHeight: '100%',
+                                                    objectFit: 'contain'
+                                                }}
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div style={{
+                                            height: '200px',
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            alignItems: 'center',
+                                            background: '#f5f5f5'
+                                        }}>
+                                            <InboxOutlined style={{ fontSize: '64px', color: '#d9d9d9' }} />
+                                        </div>
+                                    )}
+                                </div>
                             }
+                            onClick={selectMode ? () => handleProductSelect(product, !isProductSelected(product)) : undefined}
                         >
                             <div>
                                 <Space direction="vertical" style={{ width: '100%' }} size={1}>
@@ -152,14 +266,19 @@ const ProductList = ({ products }) => {
                                         {product.description || 'No description available'}
                                     </Paragraph>
 
-                                    <Button
-                                        type="primary"
-                                        icon={<EyeOutlined />}
-                                        block
-                                        onClick={() => showProductDetails(product)}
-                                    >
-                                        View Details
-                                    </Button>
+                                    {!selectMode && (
+                                        <Button
+                                            type="primary"
+                                            icon={<EyeOutlined />}
+                                            block
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                showProductDetails(product);
+                                            }}
+                                        >
+                                            View Details
+                                        </Button>
+                                    )}
                                 </Space>
                             </div>
                         </Card>
@@ -167,7 +286,30 @@ const ProductList = ({ products }) => {
                 )}
             />
 
-            {/* Product Detail Modal */}
+            {/* Floating Action Button for Sync (Alternative UI) */}
+            {selectMode && selectedProducts.length > 0 && (
+                <Affix offsetBottom={24}>
+                    <div style={{ textAlign: 'center' }}>
+                        <Button
+                            type="primary"
+                            size="large"
+                            icon={<DatabaseOutlined />}
+                            loading={syncLoading}
+                            onClick={handleBulkSync}
+                            style={{
+                                borderRadius: '24px',
+                                padding: '8px 24px',
+                                height: 'auto',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+                            }}
+                        >
+                            Sync {selectedProducts.length} Product{selectedProducts.length > 1 ? 's' : ''} to Database
+                        </Button>
+                    </div>
+                </Affix>
+            )}
+
+            {/* Product Detail Modal - Sync button removed */}
             <Modal
                 title={selectedProduct?.name}
                 open={detailModalVisible}
@@ -176,16 +318,7 @@ const ProductList = ({ products }) => {
                 footer={[
                     <Button key="back" onClick={handleCloseModal}>
                         Close
-                    </Button>,
-                    <Button
-                        key="sync"
-                        type="primary"
-                        icon={<SyncOutlined />}
-                        loading={syncLoading}
-                        onClick={() => handleSync(selectedProduct)}
-                    >
-                        Sync to Database
-                    </Button>,
+                    </Button>
                 ]}
             >
                 {loading ? (
@@ -202,7 +335,7 @@ const ProductList = ({ products }) => {
                                     src={fullProductDetails.imageUrl}
                                     alt={fullProductDetails.name}
                                     style={{ objectFit: 'contain' }}
-                                    fallback="data:image/png;base64,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"
+                                    fallback="data:image/png;base64,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"
                                 />
                             ) : (
                                 <div style={{

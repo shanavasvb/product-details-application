@@ -98,7 +98,7 @@ const styles = {
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: '500',
-    color: ' rgb(93, 90, 90)',
+    color: ' #dc2626',
     transition: 'all 0.2s ease',
     borderLeft: '3px solid transparent',
     marginBottom: '8px',
@@ -120,29 +120,6 @@ const styles = {
   label: {
     flex: 1,
     textAlign: 'left'
-  },
-  userSection: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '12px',
-    padding: '20px',
-    backgroundColor: ' #ffffff'
-  },
-  userAvatar: {
-    color: ' #59acff'
-  },
-  userDetails: {
-    flex: 1
-  },
-  userName: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: ' #0f7ce8',
-    marginBottom: '2px'
-  },
-  userRole: {
-    fontSize: '12px',
-    color: ' #b3d9ff'
   },
   main: {
     flex: 1,
@@ -187,6 +164,21 @@ const styles = {
     color: ' #1890ff',
     transition: 'background-color 0.2s'
   },
+  // Logout button style for header
+  logoutHeaderBtn: {
+    backgroundColor: '#fef2f2',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '10px',
+    cursor: 'pointer',
+    color: '#dc2626',
+    transition: 'all 0.2s ease',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontSize: '14px',
+    fontWeight: '500'
+  },
   content: {
     flex: 1,
     padding: '24px',
@@ -200,7 +192,7 @@ const addHoverEffects = () => {
   style.innerHTML = `
     [data-nav-item]:hover {
       background-color: rgb(104, 177, 255) !important;
-      // color: #dc2626 !important;
+      color: #ffffff !important;
     }
     [data-logout-item]:hover {
       background-color: #fef2f2 !important;
@@ -216,6 +208,11 @@ const addHoverEffects = () => {
     [data-header-btn]:hover {
       background-color: #e6f4ff !important;
     }
+    [data-logout-header-btn]:hover {
+      background-color: #fee2e2 !important;
+      color: #b91c1c !important;
+      transform: scale(1.05);
+    }
   `;
   document.head.appendChild(style);
 };
@@ -228,8 +225,33 @@ const EmployeeLayoutWithHover = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const user = JSON.parse(localStorage.getItem('user')) || { name: 'Admin', role: 'Employee' };
+  const user = JSON.parse(localStorage.getItem('user')) || { name: 'Employee', role: 'Employee' };
   const currentPath = location.pathname;
+
+  // Proper logout function
+  const handleLogout = () => {
+    try {
+      // Clear all stored user data
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('employee');
+
+      // Clear sessionStorage as well
+      sessionStorage.clear();
+
+      // Navigate to login page
+      navigate('/login', { replace: true });
+
+      // Optional: Show success message or confirmation
+      console.log('Employee logged out successfully');
+
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Still navigate to login even if there's an error
+      navigate('/login', { replace: true });
+    }
+  };
 
   const menuItems = [
     { label: 'Dashboard', path: '/homepage', icon: <FaHome /> },
@@ -238,10 +260,9 @@ const EmployeeLayoutWithHover = ({ children }) => {
     { label: 'Fetch Products', path: '/barcode-search', icon: <FaUpload /> },
     { label: 'Draft Products', path: '/homepage/draft-products', icon: <FaUpload /> },
     { label: 'Profile', path: '/profile', icon: <FaUserCircle /> }
-   
   ];
 
-  const logoutItem = { label: 'Logout', path: '/login', icon: <FaSignOutAlt /> };
+  const logoutItem = { label: 'Logout', icon: <FaSignOutAlt /> };
 
   return (
     <div style={styles.app}>
@@ -249,7 +270,7 @@ const EmployeeLayoutWithHover = ({ children }) => {
         <div style={styles.sidebar}>
           <div style={styles.sidebarHeader}>
             <div style={styles.logo}>
-              <div style={styles.logoIcon}>A</div>
+              <div style={styles.logoIcon}>E</div>
               <span style={styles.logoText}>Employee</span>
             </div>
             <button
@@ -280,8 +301,9 @@ const EmployeeLayoutWithHover = ({ children }) => {
                 </li>
               ))}
 
+              {/* Logout item with proper function */}
               <li
-                onClick={() => navigate(logoutItem.path)}
+                onClick={handleLogout}
                 data-logout-item
                 style={styles.logoutNavItem}
               >
@@ -292,16 +314,6 @@ const EmployeeLayoutWithHover = ({ children }) => {
               </li>
             </ul>
           </div>
-
-          {/* <div style={styles.userSection}>
-            <div style={styles.userAvatar}>
-              <FaUserCircle size={32} />
-            </div>
-            <div style={styles.userDetails}>
-              <div style={styles.userName}>{user.name}</div>
-              <div style={styles.userRole}>{user.role}</div>
-            </div>
-          </div> */}
         </div>
       )}
 
@@ -318,6 +330,7 @@ const EmployeeLayoutWithHover = ({ children }) => {
             </button>
           )}
 
+          {/* Header actions - profile icon removed, only home and logout */}
           <div style={styles.headerActions}>
             <button
               title="Home"
@@ -327,9 +340,17 @@ const EmployeeLayoutWithHover = ({ children }) => {
             >
               <FaHome size={18} />
             </button>
-            {/* <button title="Profile" style={styles.headerBtn} data-header-btn>
-              <FaUserCircle size={18} />
-            </button> */}
+
+            {/* Logout button in header */}
+            <button
+              title="Logout"
+              style={styles.logoutHeaderBtn}
+              data-logout-header-btn
+              onClick={handleLogout}
+            >
+              <FaSignOutAlt size={16} />
+              <span>Logout</span>
+            </button>
           </div>
         </div>
 
