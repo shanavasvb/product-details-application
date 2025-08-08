@@ -18,6 +18,23 @@ const Category = () => {
   const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem('user'));
   const isAdmin = user?.is_admin;
+  const [productLines, setProductLines] = useState([]);
+
+useEffect(() => {
+  axios.get('http://localhost:5000/api/v1/productline')
+    .then((response) => {
+      setProductLines(response.data);
+      console.error('product lines:', response.data);
+
+    })
+    .catch((error) => {
+      console.error('Error fetching product lines:', error);
+    });
+}, []);
+
+
+
+
 
 
   const styles = {
@@ -362,6 +379,18 @@ const Category = () => {
     ).length;
   };
 
+
+const getProductLineCount = (categoryId) => {
+  return productLines.filter(line => {
+    console.log('Comparing:', line.Category_id?.trim().toLowerCase(), categoryId?.trim().toLowerCase());
+    return line.Category_id?.trim().toLowerCase() === categoryId?.trim().toLowerCase();
+  }).length;
+};
+
+
+
+
+
   const handleEditClick = (e, category) => {
     e.stopPropagation();
     setEditingCategory(category._id);
@@ -576,6 +605,7 @@ const Category = () => {
             {filteredCategories.map((category) => {
               const hovered = hoveredCard === category._id;
               const productCount = getProductCount(category.Category_id);
+              const productLineCount = getProductLineCount(category.Category_id);
               const isEditing = editingCategory === category._id;
               const showEditActions = hovered || isEditing || window.innerWidth <= 640;
 
@@ -677,6 +707,7 @@ const Category = () => {
                         </div>
                         
                         <p style={styles.productCount}>{productCount} products</p>
+                        <p style={styles.productCount}>{productLineCount} product lines</p>
                         <ChevronRight style={styles.arrowIcon(hovered)} />
                       </>
                     ) : (
@@ -767,6 +798,8 @@ const Category = () => {
                               </div>
                             </div>
                             <p style={styles.productCount}>{productCount} products</p>
+                            <p style={styles.productCount}>{productLineCount} product lines</p>
+
                           </div>
                         </div>
                         <div style={styles.listItemRight}>

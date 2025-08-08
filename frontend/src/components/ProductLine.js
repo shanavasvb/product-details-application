@@ -631,6 +631,9 @@ useEffect(() => {
             {filteredProductLines.map((ProductLine) => {
               const hovered = hoveredCard === ProductLine._id;
               const productCount = getProductCount(ProductLine.ProductLine_id);
+               const categoryCount = categories.length;
+
+
               const isEditing = editingProductLine === ProductLine._id;
               const showEditActions = hovered || isEditing || window.innerWidth <= 640;
 
@@ -731,6 +734,8 @@ useEffect(() => {
                         </div>
                         
                         <p style={styles.productCount}>{productCount} products</p>
+                        <p style={styles.productCount}>{categoryCount} Categories</p>
+
                         <ChevronRight style={styles.arrowIcon(hovered)} />
                       </>
                     ) : (
@@ -819,6 +824,8 @@ useEffect(() => {
                               </div>
                             </div>
                             <p style={styles.productCount}>{productCount} products</p>
+                        <p style={styles.productCount}>{categoryCount} Categories</p>
+
                           </div>
                         </div>
                         <div style={styles.listItemRight}>
