@@ -230,6 +230,17 @@ function App() {
                                     />
 
                                     <Route
+                                        path="/homepage/draft-products"
+                                        element={
+                                            <ProtectedRoute>
+                                            <RoleBasedLayoutRoute>
+                                                <EmployeeDraft/>
+                                            </RoleBasedLayoutRoute>
+                                            </ProtectedRoute>
+                                        }
+                                    />
+
+                                    <Route
                                         path="/approveNotification"
                                         element={
                                             <ProtectedRoute>
