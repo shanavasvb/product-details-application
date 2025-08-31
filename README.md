@@ -1,10 +1,5 @@
 # product-details-application
 
-# Installation Guide
-
-> **Installation Date:** 2025-08-31 11:04:55 UTC  
-> **Setup by:** shanavasvb  
-> **Project:** Product Details Application with AI-Powered Barcode Search
 
 ## 🔧 Prerequisites
 
