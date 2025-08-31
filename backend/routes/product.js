@@ -11,14 +11,22 @@ const {
     restoreProduct
 } = require('../controllers/productController');
 
-router.put('/mark-deleted/:id', markProductDeleted);
-router.get('/trashed', getTrashedProducts);
-router.put('/restore/:id', restoreProduct);
-router.get('/filters', getFilters);
-router.get('/', getProducts);
-router.get('/:id', getProductById);
+// ADD DEBUG MIDDLEWARE
+router.use((req, res, next) => {
+    console.log(`🔍 Product Route: ${req.method} ${req.originalUrl}`);
+    next();
+});
+
 
 router.post('/search-by-barcodes', searchByBarcodes);
+router.get('/filters', getFilters);
+router.get('/trashed', getTrashedProducts);
 router.get('/details/:id', getProductDetails);
+
+
+router.get('/', getProducts);
+router.get('/:id', getProductById);
+router.put('/mark-deleted/:id', markProductDeleted);
+router.put('/restore/:id', restoreProduct);
 
 module.exports = router;

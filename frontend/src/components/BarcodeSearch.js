@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Card,
     Typography,
@@ -9,21 +9,34 @@ import {
     Divider,
     Alert,
     Spin,
-    List
+    List,
+    Progress,
+    Statistic,
+    Row,
+    Col,
+    Badge,
+    Tooltip,
+    notification
 } from 'antd';
 import {
     ScanOutlined,
     SearchOutlined,
     DeleteOutlined,
     InfoCircleOutlined,
-    BarcodeOutlined
+    BarcodeOutlined,
+    DatabaseOutlined,
+    ApiOutlined,
+    ClockCircleOutlined,
+    CheckCircleOutlined,
+    ExclamationCircleOutlined,
+    ReloadOutlined
 } from '@ant-design/icons';
 import axios from 'axios';
-import ProductList from './ProductList'; // Assuming this component exists
+import ProductList from './ProductList';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
 
 const BarcodeSearch = () => {
@@ -33,17 +46,19 @@ const BarcodeSearch = () => {
     const [products, setProducts] = useState([]);
     const [notFound, setNotFound] = useState([]);
     const [searched, setSearched] = useState(false);
+    const [searchStats, setSearchStats] = useState(null);
+    const [searchProgress, setSearchProgress] = useState(0);
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    // Get user info for admin status
     const isAdmin = user?.is_admin;
 
-    // Inline styles following your ProductLine pattern
+    // Enhanced styles with better responsiveness
     const styles = {
         mainContainer: {
             minHeight: '100vh',
             position: 'relative',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #ddd6fe 100%)',
         },
         header: {
             position: 'sticky',
@@ -53,79 +68,96 @@ const BarcodeSearch = () => {
             backdropFilter: 'blur(16px)',
             borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
             marginBottom: '2rem',
+            background: 'rgba(255, 255, 255, 0.9)',
+            padding: '20px 0'
         },
         headerContent: {
             display: 'flex',
             flexDirection: window.innerWidth >= 1024 ? 'row' : 'column',
             alignItems: window.innerWidth >= 1024 ? 'center' : 'flex-start',
             justifyContent: window.innerWidth >= 1024 ? 'space-between' : 'flex-start',
+            maxWidth: '1200px',
+            margin: '0 auto',
+            padding: '0 24px'
         },
         title: (isAdmin) => ({
             fontSize: '2.25rem',
             fontWeight: 'bold',
-            width: '108%',
-            background: isAdmin ? 'linear-gradient(to right, rgb(79, 70, 229), rgb(147, 51, 234))' : '#1890ff',
+            background: isAdmin ? 'linear-gradient(to right, rgb(79, 70, 229), rgb(147, 51, 234))' : 'linear-gradient(to right, #1890ff, #52c41a)',
             WebkitBackgroundClip: 'text',
             color: 'transparent',
             marginBottom: '0.25rem',
             marginTop: '1.25rem',
-            marginLeft: '25%'
         }),
         subtitle: {
-            width: '100%',
             color: 'rgb(75, 85, 99)',
             display: 'flex',
             alignItems: 'center',
             gap: '0.5rem',
             marginTop: '0.25rem',
-            marginLeft: '25%'
         },
         searchControls: {
             display: 'flex',
             flexDirection: window.innerWidth >= 640 ? 'row' : 'column',
             gap: '1rem',
-            marginRight: '3%'
         },
-        searchInputContainer: {
-            position: 'relative'
+        quickSearchContainer: {
+            position: 'relative',
+            minWidth: '250px'
         },
-        searchInput: {
-            padding: '0.5rem 1rem 0.5rem 2.5rem',
-            backgroundColor: 'rgba(255, 255, 255, 0.5)',
+        quickSearchInput: {
+            padding: '8px 12px 8px 40px',
+            backgroundColor: 'rgba(255, 255, 255, 0.9)',
             backdropFilter: 'blur(4px)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: '0.75rem',
+            borderRadius: '8px',
             width: '100%',
-            maxWidth: '16rem',
             outline: 'none',
             transition: 'all 0.3s ease',
-            fontSize: '16px'
+            fontSize: '14px'
         },
         searchIcon: {
             position: 'absolute',
-            left: '0.75rem',
+            left: '12px',
             top: '50%',
             transform: 'translateY(-50%)',
             color: 'rgb(156, 163, 175)',
-            width: '1.25rem',
-            height: '1.25rem',
+            fontSize: '16px',
             pointerEvents: 'none'
         }
     };
 
-    const handleInputChange = (e) => {
-        setInputValue(e.target.value);
-    };
-
+    // Enhanced input parsing with validation
     const parseInput = () => {
-        // Split by newlines, commas, or spaces and filter out empty values
         const parsed = inputValue
             .split(/[\n,\s]+/)
             .map(code => code.trim())
-            .filter(code => code.length > 0);
+            .filter(code => {
+                // Basic barcode validation (adjust regex as needed)
+                return code.length >= 8 && code.length <= 20 && /^[0-9]+$/.test(code);
+            });
+
+        if (parsed.length === 0) {
+            message.warning('No valid barcodes found. Please enter barcodes with 8-20 digits.');
+            return;
+        }
+
+        const invalid = inputValue
+            .split(/[\n,\s]+/)
+            .map(code => code.trim())
+            .filter(code => code.length > 0)
+            .filter(code => !(code.length >= 8 && code.length <= 20 && /^[0-9]+$/.test(code)));
+
+        if (invalid.length > 0) {
+            notification.warning({
+                message: 'Invalid Barcodes Detected',
+                description: `Skipped ${invalid.length} invalid barcode(s). Valid barcodes should be 8-20 digits.`,
+                duration: 4
+            });
+        }
 
         setBarcodes(parsed);
-        message.info(`${parsed.length} barcodes added for search`);
+        message.success(`${parsed.length} valid barcodes ready for search`);
     };
 
     const clearInput = () => {
@@ -134,8 +166,11 @@ const BarcodeSearch = () => {
         setProducts([]);
         setNotFound([]);
         setSearched(false);
+        setSearchStats(null);
+        setSearchProgress(0);
     };
 
+    // Enhanced search with progress tracking
     const searchProducts = async () => {
         if (barcodes.length === 0) {
             message.warning('Please add at least one barcode to search');
@@ -143,83 +178,154 @@ const BarcodeSearch = () => {
         }
 
         setLoading(true);
+        setSearchProgress(0);
+
+        // Simulate progress for user feedback
+        const progressInterval = setInterval(() => {
+            setSearchProgress(prev => {
+                if (prev >= 90) return prev;
+                return prev + Math.random() * 15;
+            });
+        }, 200);
+
         try {
+            const startTime = new Date();
+
             const response = await axios.post('/api/v1/product/search-by-barcodes', {
                 barcodes: barcodes
+            });
+
+            clearInterval(progressInterval);
+            setSearchProgress(100);
+
+            if (response.data.success) {
+                const endTime = new Date();
+                const searchTime = ((endTime - startTime) / 1000).toFixed(1);
+
+                setProducts(response.data.data);
+                setNotFound(response.data.notFound);
+                setSearched(true);
+
+                // Enhanced search statistics
+                setSearchStats({
+                    totalSearched: barcodes.length,
+                    found: response.data.count,
+                    notFound: response.data.notFoundCount,
+                    fromDatabase: response.data.fromDatabase,
+                    newlyFetched: response.data.newlyFetched,
+                    searchTime: searchTime,
+                    timestamp: response.data.searchTimestamp
+                });
+
+                // Enhanced success notification
+                notification.success({
+                    message: 'Search Completed Successfully',
+                    description: (
+                        <div>
+                            <p>Found <strong>{response.data.count}</strong> products in <strong>{searchTime}s</strong></p>
+                            <p>📊 {response.data.fromDatabase} from database, {response.data.newlyFetched} newly fetched</p>
+                        </div>
+                    ),
+                    duration: 5
+                });
+
+                if (response.data.notFoundCount > 0) {
+                    notification.warning({
+                        message: 'Some Barcodes Not Found',
+                        description: `${response.data.notFoundCount} barcode(s) could not be found in any source`,
+                        duration: 4
+                    });
+                }
+            }
+        } catch (error) {
+            clearInterval(progressInterval);
+            setSearchProgress(0);
+
+            const errorMsg = error.response?.data?.message || 'Failed to search products';
+
+            notification.error({
+                message: 'Search Failed',
+                description: errorMsg,
+                duration: 6
+            });
+
+            console.error('Error searching products:', error);
+        } finally {
+            setLoading(false);
+            setTimeout(() => setSearchProgress(0), 1000);
+        }
+    };
+
+    // Quick single barcode search
+    const handleQuickSearch = async (barcode) => {
+        if (!barcode.trim()) return;
+
+        setInputValue(barcode);
+        setBarcodes([barcode]);
+
+        // Auto-trigger search for single barcode
+        try {
+            setLoading(true);
+            const response = await axios.post('/api/v1/product/search-by-barcodes', {
+                barcodes: [barcode]
             });
 
             if (response.data.success) {
                 setProducts(response.data.data);
                 setNotFound(response.data.notFound);
                 setSearched(true);
-
-                message.success(`Found ${response.data.count} products`);
-                if (response.data.notFoundCount > 0) {
-                    message.warning(`${response.data.notFoundCount} barcodes not found`);
-                }
+                setSearchStats({
+                    totalSearched: 1,
+                    found: response.data.count,
+                    notFound: response.data.notFoundCount,
+                    fromDatabase: response.data.fromDatabase,
+                    newlyFetched: response.data.newlyFetched,
+                    searchTime: '< 1',
+                    timestamp: response.data.searchTimestamp
+                });
             }
         } catch (error) {
-            const errorMsg = error.response?.data?.message || 'Failed to search products';
-            message.error(errorMsg);
-            console.error('Error searching products:', error);
+            console.error('Quick search error:', error);
+            message.error('Quick search failed');
         } finally {
             setLoading(false);
         }
     };
 
     const cardStyle = {
-        borderRadius: '8px',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+        borderRadius: '12px',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
         border: '1px solid #f0f0f0',
-        marginBottom: '20px'
-    };
-
-    const headerStyle = {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '16px',
-        padding: '0 4px'
+        marginBottom: '24px',
+        background: 'rgba(255, 255, 255, 0.95)',
+        backdropFilter: 'blur(10px)'
     };
 
     return (
         <div style={styles.mainContainer}>
-            {/* Header Section - Following ProductLine Pattern */}
+            {/* Enhanced Header */}
             <header style={styles.header}>
                 <div style={styles.headerContent}>
                     <div>
-                       
+                        <h1 style={styles.title(isAdmin)}>
+                             Smart Barcode Search
+                        </h1>
                         <p style={styles.subtitle}>
-                            <BarcodeOutlined style={{ width: '1rem', height: '1rem' }} />
-                            Search products by barcode - Enter multiple barcodes for bulk search
+                            <BarcodeOutlined style={{ fontSize: '16px' }} />
+                            AI-powered product discovery with real-time data enhancement
                         </p>
                     </div>
 
                     <div style={styles.searchControls}>
-                        <div style={styles.searchInputContainer}>
+                        <div style={styles.quickSearchContainer}>
                             <SearchOutlined style={styles.searchIcon} />
                             <input
                                 type="text"
-                                style={{
-                                    ...styles.searchInput,
-                                    ':focus': {
-                                        boxShadow: '0 0 0 2px #1890ff',
-                                        borderColor: 'transparent'
-                                    }
-                                }}
-                                placeholder="Quick barcode search..."
-                                onFocus={(e) => {
-                                    e.target.style.boxShadow = '0 0 0 2px #1890ff';
-                                    e.target.style.borderColor = 'transparent';
-                                }}
-                                onBlur={(e) => {
-                                    e.target.style.boxShadow = 'none';
-                                    e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-                                }}
+                                style={styles.quickSearchInput}
+                                placeholder="Quick single barcode search..."
                                 onKeyPress={(e) => {
                                     if (e.key === 'Enter' && e.target.value.trim()) {
-                                        setInputValue(e.target.value.trim());
-                                        parseInput();
+                                        handleQuickSearch(e.target.value.trim());
                                     }
                                 }}
                             />
@@ -229,35 +335,101 @@ const BarcodeSearch = () => {
             </header>
 
             {/* Main Content */}
-            <div style={{ padding: '0 2%' }}>
+            <div style={{ padding: '0 24px', maxWidth: '1200px', margin: '0 auto' }}>
+                {/* Search Statistics */}
+                {searchStats && (
+                    <Card style={{ ...cardStyle, marginBottom: '16px' }}>
+                        <Row gutter={16}>
+                            <Col span={6}>
+                                <Statistic
+                                    title="Total Searched"
+                                    value={searchStats.totalSearched}
+                                    prefix={<BarcodeOutlined />}
+                                />
+                            </Col>
+                            <Col span={6}>
+                                <Statistic
+                                    title="Found"
+                                    value={searchStats.found}
+                                    prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
+                                    valueStyle={{ color: '#52c41a' }}
+                                />
+                            </Col>
+                            <Col span={6}>
+                                <Statistic
+                                    title="From Database"
+                                    value={searchStats.fromDatabase}
+                                    prefix={<DatabaseOutlined style={{ color: '#1890ff' }} />}
+                                    valueStyle={{ color: '#1890ff' }}
+                                />
+                            </Col>
+                            <Col span={6}>
+                                <Statistic
+                                    title="AI Enhanced"
+                                    value={searchStats.newlyFetched}
+                                    prefix={<ApiOutlined style={{ color: '#722ed1' }} />}
+                                    valueStyle={{ color: '#722ed1' }}
+                                />
+                            </Col>
+                        </Row>
+                        <Divider style={{ margin: '16px 0 8px 0' }} />
+                        <Text type="secondary" style={{ fontSize: '12px' }}>
+                            <ClockCircleOutlined /> Search completed in {searchStats.searchTime}s • {new Date(searchStats.timestamp).toLocaleString()}
+                        </Text>
+                    </Card>
+                )}
+
                 <Card style={cardStyle}>
-                    <div style={headerStyle}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                         <div>
                             <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
-                                <ScanOutlined /> Barcode Product Search
+                                <ScanOutlined /> Bulk Barcode Search
                             </Title>
                             <Text type="secondary" style={{ fontSize: '13px' }}>
-                                Enter multiple barcodes to search for products
+                                Enter multiple barcodes for efficient bulk product discovery
                             </Text>
                         </div>
+                        {barcodes.length > 0 && (
+                            <Badge count={barcodes.length} style={{ backgroundColor: '#52c41a' }}>
+                                <Button
+                                    icon={<BarcodeOutlined />}
+                                    size="small"
+                                >
+                                    Ready
+                                </Button>
+                            </Badge>
+                        )}
                     </div>
 
-                    {/* Input Area */}
+                    {/* Enhanced Input Area */}
                     <TextArea
                         value={inputValue}
-                        onChange={handleInputChange}
-                        placeholder="Enter barcodes separated by commas, spaces, or new lines..."
-                        autoSize={{ minRows: 4, maxRows: 8 }}
-                        style={{ borderRadius: '6px', marginBottom: '16px' }}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        placeholder={`Enter barcodes separated by commas, spaces, or new lines...
+
+Examples:
+8901234567890
+1234567890123, 9876543210987
+5901234123457 6901234567890
+
+Supports 8-20 digit barcodes`}
+                        autoSize={{ minRows: 5, maxRows: 10 }}
+                        style={{
+                            borderRadius: '8px',
+                            marginBottom: '16px',
+                            fontFamily: 'monospace',
+                            fontSize: '13px'
+                        }}
                     />
 
-                    <Space style={{ marginBottom: '16px' }}>
+                    <Space style={{ marginBottom: '16px' }} wrap>
                         <Button
                             type="primary"
                             onClick={parseInput}
                             icon={<ScanOutlined />}
+                            disabled={!inputValue.trim()}
                         >
-                            Parse Barcodes
+                            Parse & Validate Barcodes
                         </Button>
                         <Button
                             onClick={clearInput}
@@ -265,55 +437,91 @@ const BarcodeSearch = () => {
                         >
                             Clear All
                         </Button>
+                        <Button
+                            icon={<ReloadOutlined />}
+                            onClick={() => setInputValue(barcodes.join('\n'))}
+                            disabled={barcodes.length === 0}
+                        >
+                            Reload Parsed
+                        </Button>
                     </Space>
 
-                    {/* Barcode List */}
+                    {/* Enhanced Barcode Display */}
                     {barcodes.length > 0 && (
                         <>
-                            <Divider orientation="left">Barcodes to Search ({barcodes.length})</Divider>
+                            <Divider orientation="left">
+                                <Space>
+                                    Ready for Search
+                                    <Badge count={barcodes.length} style={{ backgroundColor: '#1890ff' }} />
+                                </Space>
+                            </Divider>
+
                             <div style={{
-                                display: 'flex',
-                                flexWrap: 'wrap',
-                                gap: '8px',
-                                marginBottom: '16px'
+                                maxHeight: '120px',
+                                overflowY: 'auto',
+                                marginBottom: '20px',
+                                padding: '12px',
+                                background: '#fafafa',
+                                borderRadius: '8px'
                             }}>
-                                {barcodes.map((code, index) => (
-                                    <div
-                                        key={index}
-                                        style={{
-                                            background: '#f0f0f0',
-                                            padding: '4px 10px',
-                                            borderRadius: '16px',
-                                            fontSize: '12px',
-                                            display: 'inline-block'
-                                        }}
-                                    >
-                                        {code}
-                                    </div>
-                                ))}
+                                <div style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    gap: '8px',
+                                }}>
+                                    {barcodes.map((code, index) => (
+                                        <Tooltip key={index} title={`Barcode ${index + 1}`}>
+                                            <div
+                                                style={{
+                                                    background: '#e6f7ff',
+                                                    color: '#1890ff',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '16px',
+                                                    fontSize: '12px',
+                                                    fontFamily: 'monospace',
+                                                    border: '1px solid #91d5ff',
+                                                    display: 'inline-block'
+                                                }}
+                                            >
+                                                {code}
+                                            </div>
+                                        </Tooltip>
+                                    ))}
+                                </div>
                             </div>
 
-                            <Button
-                                type="primary"
-                                size="large"
-                                icon={<SearchOutlined />}
-                                onClick={searchProducts}
-                                loading={loading}
-                                style={{ width: '100%', marginBottom: '16px' }}
-                            >
-                                Search Products
-                            </Button>
+                            {/* Enhanced Search Button with Progress */}
+                            <div style={{ position: 'relative' }}>
+                                <Button
+                                    type="primary"
+                                    size="large"
+                                    icon={loading ? <Spin size="small" /> : <SearchOutlined />}
+                                    onClick={searchProducts}
+                                    loading={loading}
+                                    style={{
+                                        width: '100%',
+                                        height: '50px',
+                                        fontSize: '16px',
+                                        fontWeight: 'bold'
+                                    }}
+                                    disabled={loading}
+                                >
+                                    {loading ? `Searching ${barcodes.length} Products...` : ` Search ${barcodes.length} Products`}
+                                </Button>
+
+                                {loading && searchProgress > 0 && (
+                                    <Progress
+                                        percent={Math.round(searchProgress)}
+                                        size="small"
+                                        style={{ marginTop: '8px' }}
+                                        status={searchProgress === 100 ? 'success' : 'active'}
+                                    />
+                                )}
+                            </div>
                         </>
                     )}
 
-                    {/* Search Results */}
-                    {loading && (
-                        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                            <Spin size="large" />
-                            <div style={{ marginTop: '10px' }}>Searching for products...</div>
-                        </div>
-                    )}
-
+                    {/* Enhanced Search Results */}
                     {searched && !loading && (
                         <>
                             {notFound.length > 0 && (
@@ -321,22 +529,27 @@ const BarcodeSearch = () => {
                                     message={`${notFound.length} barcodes not found`}
                                     description={
                                         <div>
-                                            <Text>The following barcodes could not be found in the database:</Text>
+                                            <Paragraph style={{ marginBottom: '8px' }}>
+                                                The following barcodes could not be found in our database or external sources:
+                                            </Paragraph>
                                             <div style={{
+                                                maxHeight: '100px',
+                                                overflowY: 'auto',
                                                 display: 'flex',
                                                 flexWrap: 'wrap',
-                                                gap: '8px',
-                                                marginTop: '8px'
+                                                gap: '6px',
                                             }}>
                                                 {notFound.map((code, index) => (
                                                     <div
                                                         key={index}
                                                         style={{
                                                             background: '#fff2e8',
-                                                            borderColor: '#ffccc7',
+                                                            color: '#d4380d',
                                                             padding: '4px 10px',
-                                                            borderRadius: '16px',
-                                                            fontSize: '12px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '11px',
+                                                            fontFamily: 'monospace',
+                                                            border: '1px solid #ffccc7',
                                                             display: 'inline-block'
                                                         }}
                                                     >
@@ -348,7 +561,8 @@ const BarcodeSearch = () => {
                                     }
                                     type="warning"
                                     showIcon
-                                    style={{ marginBottom: '16px' }}
+                                    icon={<ExclamationCircleOutlined />}
+                                    style={{ marginBottom: '20px' }}
                                 />
                             )}
 
@@ -357,16 +571,20 @@ const BarcodeSearch = () => {
                             ) : (
                                 <Alert
                                     message="No products found"
-                                    description="Try searching with different barcodes"
+                                    description="None of the searched barcodes returned any products. Try with different barcodes or check if they are valid."
                                     type="info"
                                     showIcon
                                     icon={<InfoCircleOutlined />}
+                                    action={
+                                        <Button size="small" onClick={clearInput}>
+                                            Start New Search
+                                        </Button>
+                                    }
                                 />
                             )}
                         </>
                     )}
                 </Card>
-                
             </div>
         </div>
     );
