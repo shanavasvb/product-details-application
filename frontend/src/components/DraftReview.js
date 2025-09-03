@@ -47,7 +47,7 @@ const DraftReview = () => {
 
     try {
       await axios.put(`http://localhost:5000/api/v1/drafts/${draft._id}/${type === 'approve' ? 'approve' : 'reject'}`);
-      alert(`Draft ${type === 'approve' ? 'approved' : 'rejected'} successfully!`);
+      alert(`Edit ${type === 'approve' ? 'approved' : 'rejected'} successfully!`);
     } catch (err) {
       alert(`Error: ${err.response?.data?.message || err.message}`);
     } finally {
@@ -90,12 +90,6 @@ const DraftReview = () => {
       transition: 'all 0.3s ease',
       textDecoration: 'none'
     },
-    // backButtonHover: {
-    //   backgroundColor: '#e5e7eb',
-    //   color: '#000000',
-    //   transform: 'translateY(-2px)',
-    //   boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)'
-    // },
     wrapper: {
       maxWidth: '900px',
       margin: '0 auto'
@@ -382,7 +376,7 @@ const DraftReview = () => {
 
       <div style={styles.wrapper}>
         <div style={styles.header}>
-          <h1 style={styles.title}>Draft Review</h1>
+          <h1 style={styles.title}>Edit Review</h1>
           <p style={styles.subtitle}>Review and approve product changes</p>
         </div>
 
@@ -400,7 +394,7 @@ const DraftReview = () => {
             <div style={styles.headerPattern}></div>
             <div style={styles.headerContent}>
               <h2 style={styles.headerTitle}>
-                <FileText size={24} /> Product Draft Submission
+                <FileText size={24} /> Product Edit Submission
               </h2>
               <div style={styles.headerInfo}>
                 <div style={styles.headerInfoItem}>
