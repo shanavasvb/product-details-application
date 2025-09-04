@@ -203,6 +203,7 @@ router.put('/:draftId/approve', async (req, res) => {
     }
 
     const productId = existingProduct.Product_id;
+    const Dbarcode = existingProduct.Barcode;
 
     // Helper to get or create Category, Brand, ProductLine
     const getOrCreateId = async (Model, idField, nameField, nameValue) => {
@@ -222,7 +223,7 @@ router.put('/:draftId/approve', async (req, res) => {
 
     // Update product
     await Product.findOneAndUpdate(
-      { Product_id: productId },
+      { Barcode: Dbarcode },
       {
         Product_id: productId,
         ProductName: draftData.ProductName,
@@ -287,33 +288,6 @@ router.put('/:draftId/reject', async (req, res) => {
       return res.status(404).json({ message: 'Draft not found' });
     }
 
-    // Delete the draft
-    await Draft.findByIdAndDelete(draftId);
-
-    // Delete the related notification
-    await Notification.findOneAndDelete({
-      relatedId: draft.productId,
-      senderId: draft.employeeId.toString(),
-      type: 'editing'
-    });
-
-    res.json({ message: 'Draft rejected and deleted successfully' });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error rejecting draft', error: error.message });
-  }
-});
-
-// PUT - Reject draft
-router.put('/:draftId/reject', async (req, res) => {
-  try {
-    const { draftId } = req.params;
-
-    const draft = await Draft.findById(draftId);
-    if (!draft) {
-      return res.status(404).json({ message: 'Draft not found' });
-    }
-
     const draftData = draft.draftData;
     const barcode = draftData.Barcode;
 
@@ -323,11 +297,11 @@ router.put('/:draftId/reject', async (req, res) => {
       return res.status(404).json({ message: 'No product found with matching barcode' });
     }
 
-    const productId = existingProduct.Product_id;
+    const Dbarcode = existingProduct.Barcode;
 
     // Update the product's Review_Status to "Reviewed"
     await Product.findOneAndUpdate(
-      { Product_id: productId },
+      { Barcode: Dbarcode },
       { Review_Status: "Reviewed" }
     );
 

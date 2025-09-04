@@ -26,8 +26,6 @@ function ProductData() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userId, setUserId] = useState(null);
   const [draftId, setDraftId] = useState(null);
-  // const [isAutoSaving, setIsAutoSaving] = useState(false);
-  // const [lastSaved, setLastSaved] = useState(null);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -283,7 +281,7 @@ const handleSaveClick = async () => {
     return <div style={styles.loadingContainer}><p style={styles.loadingText}>Loading product details...</p></div>;
   }
 
-  const isEditDisabled = !isAdmin && product?.Review_Status === 'Pending';
+  const isEditDisabled = product?.Review_Status === 'Pending';
 
   return (
     <div style={styles.container}>
@@ -352,22 +350,6 @@ const handleSaveClick = async () => {
       <div style={styles.card}>
         <div style={styles.productInfo}>
           <div style={styles.section}>
-
-            {/* Image Section
-            <div style={styles.imageSection}>
-              <label style={styles.label}>Product Image</label>
-              <div style={styles.imageContainer}>
-                <div style={styles.imagePlaceholder}>
-                  <FaImage style={styles.imageIcon} />
-                  <span style={styles.imageText}>No image available</span>
-                </div>
-                {isEditing && (
-                  <button style={styles.imageEditButton}>
-                    <FaEdit style={styles.editIcon} />
-                  </button>
-                )}
-              </div>
-            </div> */}
 
             <div style={styles.detailsGrid}>
               {/* Category Section*/}
@@ -470,16 +452,7 @@ const handleSaveClick = async () => {
                   {/* BArcode Section*/}
               <div style={styles.gridItem}>
                 <label style={styles.label}>Barcode</label>
-                {/* {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedProduct.Barcode || ''}
-                    onChange={(e) => setEditedProduct({ ...editedProduct, Barcode: e.target.value })}
-                    style={styles.input}
-                  />
-                ) : (
-                  <p style={styles.barcodeValue}>{product.Barcode}</p>
-                )} */}
+                
                 <p style={styles.barcodeValue}>{product.Barcode}</p>
               </div>
             </div>
@@ -667,53 +640,6 @@ deleteFeatureButton: {
   justifyContent: 'center',
   transition: 'background-color 0.2s ease'
 },
-  // imageSection: {
-  // marginBottom: '2rem',
-  // paddingBottom: '1.5rem',
-  // borderBottom: '1px solid #f0f0f0'
-  // },
-  // imageContainer: {
-  // position: 'relative',
-  // width: '200px',
-  // height: '200px',
-  // border: '2px dashed #ddd',
-  // borderRadius: '8px',
-  // display: 'flex',
-  // flexDirection: 'column',
-  // alignItems: 'center',
-  // justifyContent: 'center',
-  // backgroundColor: '#f8f9fa'
-  // },
-  // imagePlaceholder: {
-  // display: 'flex',
-  // flexDirection: 'column',
-  // alignItems: 'center',
-  // gap: '0.5rem'
-  // },
-  // imageIcon: {
-  // fontSize: '3rem',
-  // color: '#ccc'
-  // },
-  // imageText: {
-  // fontSize: '0.9rem',
-  // color: '#666'
-  // },
-  // imageEditButton: {
-  // position: 'absolute',
-  // top: '8px',
-  // right: '8px',
-  // width: '32px',
-  // height: '32px',
-  // backgroundColor: '#3498db',
-  // color: 'white',
-  // border: 'none',
-  // borderRadius: '50%',
-  // cursor: 'pointer',
-  // display: 'flex',
-  // alignItems: 'center',
-  // justifyContent: 'center',
-  // boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-  // },
   editIcon: {
     fontSize: '0.8rem'
   },
