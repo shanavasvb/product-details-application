@@ -12,7 +12,7 @@
 
 ---
 
-[**Key Features**](#key-features) • [**Architecture**](#system-architecture) • [**Quick Start**](#quick-start) • [**Documentation**](#api-documentation) 
+[**Key Features**](#key-features) • [**Architecture**](#system-architecture) • [**Database Design**](#database-design) • [**Quick Start**](#quick-start) • [**API Documentation**](#api-documentation) 
 
 </div>
 
@@ -98,17 +98,40 @@ Our system follows a modern, scalable three-tier architecture designed for enter
 - **File Storage**: GridFS for binary asset management
 - **Logging**: Structured logging with configurable levels
 
-### Database Design
+## Database Design
 
-Our data model emphasizes flexibility, scalability, and referential integrity:
+Our data model emphasizes flexibility, scalability, and referential integrity with a comprehensive entity-relationship structure:
 
-**Core Entities:**
-- `Product`: Central entity with comprehensive product information
-- `Category` & `ProductLine`: Hierarchical product organization
-- `Brand`: Manufacturer and brand information management
-- `User` & `Admin`: Role-based access control implementation
-- `Draft`: Version-controlled editing system
-- `Specification` & `Features`: Extensible product attribute system
+### Entity Relationship Diagram
+
+<div align="center">
+
+![Database ER Diagram](./images/er.png)
+
+</div>
+
+### Core Entities
+
+The database architecture consists of interconnected entities that ensure data integrity and support complex business workflows:
+
+**Primary Entities:**
+- **Product**: Central entity containing comprehensive product information with relationships to categories, brands, and product lines
+- **Category & ProductLine**: Hierarchical product organization enabling flexible categorization
+- **Brand**: Manufacturer and brand information management with product associations
+- **Admin & Employee**: Role-based user management with distinct permissions and capabilities
+- **Specification & Features**: Extensible product attribute system for detailed product descriptions
+
+**Relationships:**
+- **One-to-Many**: Categories to Products, Brands to Products, ProductLines to Products
+- **Many-to-Many**: Products to Features through junction relationships
+- **Foreign Keys**: Ensuring referential integrity across all entity relationships
+
+### Data Integrity Features
+
+- **Referential Integrity**: Foreign key constraints maintain data consistency
+- **Indexing Strategy**: Optimized indexes on frequently queried fields (barcodes, product names, categories)
+- **Validation Rules**: Schema-level validation for data quality assurance
+- **Audit Capabilities**: Built-in tracking for data changes and user actions
 
 ## Quick Start
 
@@ -239,7 +262,7 @@ npm start
 | Service | URL | Description |
 |---------|-----|-------------|
 | Frontend Application | `http://localhost:3000` | Main user interface |
-| API Gateway | `http://localhost:5000/api/v1` | RESTful API endpoints |
+
 
 ### Default Administrative Access
 
@@ -247,7 +270,6 @@ npm start
 Phone Number: 1234567890
 Password: admin123
 ```
-
 
 ## Business Workflows
 
@@ -326,23 +348,62 @@ const products = await fetch('/api/v1/product/search', {
 });
 ```
 
+## Screenshots
 
+<div align="center">
 
-### Development Team
+### Admin Dashboard
+*Comprehensive administrative control panel for system management*
 
+### Employee Interface
+*Intuitive product search and management interface*
 
-- [shanavasvb](https://github.com/shanavasvb) 
+### Product Details View
+*Detailed product information with specifications and features*
+
+</div>
+
+## Contributing
+
+We welcome contributions to the Product Details Management System! Please follow these guidelines:
+
+### Development Guidelines
+- Follow the established code style and conventions
+- Write comprehensive tests for new features
+- Update documentation for any API changes
+- Ensure all tests pass before submitting pull requests
+
+### Reporting Issues
+- Use the GitHub Issues template
+- Provide detailed reproduction steps
+- Include environment information
+- Attach relevant logs or screenshots
+
+## Development Team
+
+**Project Maintainers:**
+- [shanavasvb](https://github.com/shanavasvb)
 - [AayishaOS](https://github.com/AayishaOS) 
 - [SumayyaVN9](https://github.com/SumayyaVN9) 
 
+## License
 
+This project is proprietary software owned by Datcarts . All rights reserved.
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/shanavasvb/product-details-application/issues)
+- **Documentation**: [API Documentation](https://app.swaggerhub.com/apis-docs/datcarts-01f/Supermarket-api/1.0.0)
+
+---
 
 <div align="center">
 
 **© 2025 Datcarts Technologies. All Rights Reserved.**
 
-
 [![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=flat-square&logo=github)](https://github.com/shanavasvb/product-details-application)
 [![Documentation](https://img.shields.io/badge/Documentation-API%20Docs-blue?style=flat-square&logo=swagger)](https://app.swaggerhub.com/apis-docs/datcarts-01f/Supermarket-api/1.0.0)
+[![Version](https://img.shields.io/badge/Version-1.0.0-brightgreen?style=flat-square)](https://github.com/shanavasvb/product-details-application/releases)
+
 
 </div>
