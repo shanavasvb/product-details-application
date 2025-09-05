@@ -9,6 +9,7 @@ lerna-debug.log*
 
 backend/.env
 
+
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
@@ -183,3 +184,5 @@ ehthumbs.db
 Thumbs.db
 
 backend/barcode_env/
+tstex_modules/
+
