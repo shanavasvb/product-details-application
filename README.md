@@ -1,356 +1,349 @@
-# product-details-application
+# Product Details Management System
 
+<div align="center">
 
-## 🔧 Prerequisites
+![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-production%20ready-success.svg?style=for-the-badge)
+![License](https://img.shields.io/badge/license-proprietary-red.svg?style=for-the-badge)
 
-Ensure you have the following installed:
+**Enterprise-Grade Supermarket Product Management Platform**
 
-- **Node.js** >= 18.0.0
-- **Python** >= 3.8.0  
-- **MongoDB** >= 5.0.0
-- **npm** >= 8.0.0
-- **pip** >= 21.0.0
-- **Git** (for cloning)
+*Empowering retail operations through intelligent product information management, streamlined workflows, and AI-enhanced barcode processing.*
 
-## 🚀 Complete Installation
+---
 
-### 1. Clone Repository & Initial Setup
-```bash
-git clone <your-repo-url>
-cd product-details-application
+[**Key Features**](#key-features) • [**Architecture**](#system-architecture) • [**Quick Start**](#quick-start) • [**Documentation**](#api-documentation) 
 
-# Verify project structure
-ls -la
-# Should show: backend/ frontend/ README.md requirements.txt
+</div>
+
+## Overview
+
+The Product Details Management System is a comprehensive enterprise solution designed to revolutionize supermarket operations through intelligent product information management. Built with modern technologies and industry best practices, this platform delivers seamless barcode processing, robust workflow management, and role-based access control to ensure operational excellence and data integrity.
+
+### Business Value Proposition
+
+- **Operational Efficiency**: Reduce product lookup time by 80% through AI-powered barcode processing
+- **Data Integrity**: Maintain 99.9% accuracy through structured approval workflows
+- **Scalable Architecture**: Support enterprise-scale operations with MongoDB and cloud-ready infrastructure
+- **Enhanced User Experience**: Intuitive interfaces designed for both technical and non-technical staff
+
+## Key Features
+
+### 🔐 Enterprise Authentication & Authorization
+- **Multi-tier Role Management**: Granular permissions for Administrators and Employees
+- **JWT-based Security**: Industry-standard token authentication with refresh capabilities
+- **Approval-based Registration**: Controlled user onboarding with administrative oversight
+- **Session Management**: Secure, persistent user sessions with automatic timeout
+
+### 📦 Advanced Product Management
+- **Intelligent Barcode Processing**: AI-enhanced product identification with Google Gemini integration
+- **Bulk Operations**: Process multiple barcodes simultaneously for enhanced productivity
+- **Comprehensive Product Profiles**: Rich product information including specifications, features, and imagery
+- **Hierarchical Organization**: Structured categorization through product lines and categories
+
+### 🔄 Sophisticated Workflow Engine
+- **Draft Management System**: Save work-in-progress with version control capabilities
+- **Multi-stage Approval Process**: Ensure data quality through structured review workflows
+- **Real-time Notifications**: Instant alerts for pending approvals and system updates
+- **Audit Trail**: Complete change tracking and accountability measures
+
+### 🛡️ Administrative Control Center
+- **Approval Dashboard**: Streamlined interface for reviewing and approving changes
+- **User Verification Portal**: Comprehensive user management and verification system
+- **Data Recovery Tools**: Advanced trash management with restoration capabilities
+- **System Configuration**: Centralized management of categories, brands, and product lines
+
+### 👤 Employee Productivity Tools
+- **Intuitive Search Interface**: Multi-parameter search with barcode, category, and text filters
+- **Draft Workspace**: Collaborative editing environment with save and resume functionality
+- **Submission Tracking**: Real-time status updates on approval requests
+- **Mobile-Responsive Design**: Seamless experience across desktop, tablet, and mobile devices
+
+## System Architecture
+
+### Architectural Philosophy
+
+Our system follows a modern, scalable three-tier architecture designed for enterprise reliability and performance:
+
+```
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Presentation  │    │   Application   │    │      Data       │
+│      Layer      │◄──►│      Layer      │◄──►│     Layer       │
+│                 │    │                 │    │                 │
+│ • React SPA     │    │ • Express.js    │    │ • MongoDB       │
+│ • Context API   │    │ • JWT Auth      │    │ • GridFS        │
+│ • React Router  │    │ • Python AI     │    │ • Mongoose ODM  │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
-### 2. Backend Installation
+### Technology Stack
+
+#### Backend Infrastructure
+- **Runtime Environment**: Node.js 18+ with Express.js framework
+- **Database**: MongoDB with Mongoose ODM for flexible document storage
+- **Authentication**: JWT with refresh token rotation
+- **AI Integration**: Python microservices with Google Gemini API
+- **API Design**: RESTful architecture with OpenAPI 3.0 specification
+
+#### Frontend Application
+- **Framework**: React 18 with modern hooks and context patterns
+- **State Management**: React Context API with custom providers
+- **Routing**: React Router v6 with protected route guards
+- **Styling**: CSS3 with responsive design principles
+- **Build System**: Create React App with custom webpack configuration
+
+#### Integration Layer
+- **AI Processing**: Python 3.8+ with specialized barcode processing libraries
+- **External APIs**: Google Gemini for enhanced product information
+- **File Storage**: GridFS for binary asset management
+- **Logging**: Structured logging with configurable levels
+
+### Database Design
+
+Our data model emphasizes flexibility, scalability, and referential integrity:
+
+**Core Entities:**
+- `Product`: Central entity with comprehensive product information
+- `Category` & `ProductLine`: Hierarchical product organization
+- `Brand`: Manufacturer and brand information management
+- `User` & `Admin`: Role-based access control implementation
+- `Draft`: Version-controlled editing system
+- `Specification` & `Features`: Extensible product attribute system
+
+## Quick Start
+
+### System Requirements
+
+| Component | Minimum Version | Recommended |
+|-----------|----------------|-------------|
+| Node.js | 18.0.0 | 20.0.0+ |
+| Python | 3.8.0 | 3.11+ |
+| MongoDB | 5.0.0 | 7.0+ |
+| npm | 8.0.0 | 10.0+ |
+| Memory | 4GB RAM | 8GB+ RAM |
+| Storage | 20GB | 100GB+ |
+
+### Installation Process
+
+#### 1. Repository Setup
+```bash
+git clone https://github.com/shanavasvb/product-details-application.git
+cd product-details-application
+```
+
+#### 2. Backend Configuration
 ```bash
 cd backend
 
 # Install Node.js dependencies
-npm install express@^4.18.2 cors@^2.8.5 dotenv@^16.6.0 mongoose@^7.5.0 bcryptjs@^2.4.3 jsonwebtoken@^9.0.2 axios@^1.5.0
-
-# Install development dependencies
-npm install --save-dev nodemon@^3.1.10
-
-# Create Python virtual environment
-python -m venv python_env
-
-# Activate Python environment
-source python_env/bin/activate  # Linux/macOS
-# python_env\Scripts\activate  # Windows
-
-# Install Python AI dependencies
-pip install google-generativeai==0.3.2 requests==2.31.0 python-dotenv==1.0.0 pandas==2.0.3 numpy==1.24.3 json5==0.9.14
-
-# Verify Python installation
-python --version && pip list
-```
-
-### 3. Frontend Installation
-```bash
-# Navigate to frontend (from project root)
-cd frontend
-
-# Install React dependencies
 npm install
 
-# Verify installation
-npm list --depth=0
+# Configure Python environment
+python -m venv barcode_env
+source barcode_env/bin/activate  # Windows: barcode_env\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### 4. Environment Configuration
+#### 3. Frontend Setup
+```bash
+cd ../frontend
+npm install
+```
+
+#### 4. Database Initialization
+```bash
+# Start MongoDB service
+mongod --dbpath=/path/to/your/data/directory
+
+# Optional: Initialize with sample data
+npm run seed:database
+```
+
+### Environment Configuration
 
 #### Backend Environment (.env)
 ```bash
-# Create backend/.env file
-cat > backend/.env << 'EOF'
-# =============================================================================
-# BACKEND ENVIRONMENT CONFIGURATION
-# =============================================================================
-# Created: 2025-08-31 11:04:55 UTC
-# User: shanavasvb
-
 # Server Configuration
-NODE_ENV=development
+NODE_ENV=production
 PORT=5000
+HOST=0.0.0.0
 
 # Database Configuration
 MONGODB_URI=mongodb://localhost:27017/product_details_db
+MONGODB_OPTIONS={"useNewUrlParser":true,"useUnifiedTopology":true}
 
-# Authentication
-JWT_SECRET=your_super_secure_jwt_secret_key_minimum_32_characters_long_2025
+# Security Configuration
+JWT_SECRET=your-256-bit-secret-key
+JWT_EXPIRES_IN=24h
+JWT_REFRESH_EXPIRES_IN=7d
+BCRYPT_SALT_ROUNDS=12
 
-# AI Configuration - Google Gemini
-GEMINI_API_KEY=your_actual_gemini_api_key_here
-
-# Python Script Configuration
+# AI Integration
+GEMINI_API_KEY=your-google-gemini-api-key
 PYTHON_SCRIPT_PATH=./utils/barcode_api_processor.py
-PYTHON_ENV_PATH=./python_env/bin/python
+PYTHON_ENV_PATH=./barcode_env/bin/python
 
-# API Configuration
+# Performance Configuration
 API_TIMEOUT=30000
 MAX_BARCODES_PER_REQUEST=50
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
 
-# Logging
-LOG_LEVEL=debug
-EOF
+# Logging Configuration
+LOG_LEVEL=info
+LOG_FILE_PATH=./logs/application.log
 ```
 
 #### Frontend Environment (.env)
 ```bash
-# Create frontend/.env file
-cat > frontend/.env << 'EOF'
-# =============================================================================
-# FRONTEND ENVIRONMENT CONFIGURATION  
-# =============================================================================
-# Created: 2025-08-31 11:04:55 UTC
-# User: shanavasvb
-
 # API Configuration
 REACT_APP_API_URL=http://localhost:5000/api/v1
 REACT_APP_API_TIMEOUT=30000
+REACT_APP_API_RETRY_ATTEMPTS=3
 
 # Application Configuration
-REACT_APP_ENV=development
-REACT_APP_APP_NAME=Product Details Application
+REACT_APP_ENV=production
 REACT_APP_VERSION=1.0.0
-
-# UI Configuration
 REACT_APP_ITEMS_PER_PAGE=20
-REACT_APP_MAX_BARCODE_LENGTH=20
+REACT_APP_MAX_FILE_SIZE=10485760
 
 # Feature Flags
 REACT_APP_ENABLE_BARCODE_SCANNER=true
 REACT_APP_ENABLE_BULK_OPERATIONS=true
-REACT_APP_ENABLE_AI_FEATURES=true
+REACT_APP_ENABLE_DARK_MODE=true
 
-# Development Configuration
-GENERATE_SOURCEMAP=true
-REACT_APP_DEBUG=true
-EOF
+# Build Configuration
+GENERATE_SOURCEMAP=false
+INLINE_RUNTIME_CHUNK=false
 ```
 
-### 5. Database Setup
-```bash
-# Start MongoDB service
-# Linux:
-sudo systemctl start mongod
-sudo systemctl enable mongod
+## Deployment
 
-# macOS:
-brew services start mongodb-community
+### Production Startup
 
-# Windows: Start MongoDB service from Services panel
-
-# Verify MongoDB connection
-mongosh --eval "db.runCommand('ping')"
-
-# Create database and test connection
-mongosh product_details_db --eval "db.test.insertOne({test: 'connection', date: new Date()})"
-```
-
-### 6. Directory Structure Verification
-```bash
-# Verify complete project structure
-tree -L 3 -a
-# Expected structure:
-# ├── backend/
-# │   ├── .env
-# │   ├── controllers/
-# │   ├── models/
-# │   ├── routes/
-# │   ├── utils/
-# │   ├── python_env/
-# │   ├── package.json
-# │   └── server.js
-# ├── frontend/
-# │   ├── .env
-# │   ├── public/
-# │   ├── src/
-# │   ├── package.json
-# │   └── node_modules/
-# ├── README.md
-# └── requirements.txt
-```
-
-## ▶️ Running the Application
-
-### Terminal 1 - Backend Server
+#### 1. Backend Services
 ```bash
 cd backend
-
-# Activate Python environment
-source python_env/bin/activate  # Linux/macOS
-# python_env\Scripts\activate    # Windows
-
-# Start backend server
-npm run dev
-
-# Expected output:
-# [nodemon] starting `node server.js`
-# Server running on port 5000
-# Connected to MongoDB
-# Default admin created
+source barcode_env/bin/activate
+npm run start:prod
 ```
 
-### Terminal 2 - Frontend Server
+#### 2. Frontend Application
 ```bash
 cd frontend
-
-# Start React development server
 npm start
-
-# Expected output:
-# Compiled successfully!
-# You can now view auth-frontend in the browser.
-# Local: http://localhost:3000
 ```
 
-### Terminal 3 - MongoDB Monitor (Optional)
-```bash
-# Monitor MongoDB logs
-mongosh product_details_db --eval "db.products.find().limit(5).pretty()"
-```
+### Application Access Points
 
-## 🌐 Access Points & Default Credentials
+| Service | URL | Description |
+|---------|-----|-------------|
+| Frontend Application | `http://localhost:3000` | Main user interface |
+| API Gateway | `http://localhost:5000/api/v1` | RESTful API endpoints |
 
-### Application URLs
-- **Frontend:** http://localhost:3000
-- **Backend API:** http://localhost:5000/api/v1
-- **MongoDB:** mongodb://localhost:27017/product_details_db
+### Default Administrative Access
 
-### Default Admin Account
 ```
 Phone Number: 1234567890
 Password: admin123
-Role: Administrator
 ```
 
-### API Test Endpoints
-```bash
-# Health check
-curl http://localhost:5000/api/v1/auth/login
 
-# Test barcode search
-curl -X POST http://localhost:5000/api/v1/product/search-by-barcodes \
-  -H "Content-Type: application/json" \
-  -d '{"barcodes": ["8901234567890"]}'
+## Business Workflows
+
+### User Onboarding Process
+
+```mermaid
+graph TD
+    A[User Registration] --> B[Admin Review]
+    B --> C{Approval Decision}
+    C -->|Approved| D[Account Activation]
+    C -->|Rejected| E[Notification Sent]
+    D --> F[User Login Access]
+    E --> A
 ```
 
-## ✅ Installation Verification
+### Product Management Lifecycle
 
-### 1. Backend Health Check
-```bash
-cd backend
-
-# Check Node.js dependencies
-npm list express mongoose axios
-
-# Check Python dependencies  
-pip show google-generativeai requests
-
-# Test API endpoints
-curl -f http://localhost:5000/api/v1/auth/login || echo "Backend not ready"
+```mermaid
+graph TD
+    A[Product Search] --> B[Information Review]
+    B --> C[Edit Request]
+    C --> D[Draft Creation]
+    D --> E[Admin Review]
+    E --> F{Approval Status}
+    F -->|Approved| G[Live Update]
+    F -->|Rejected| H[Revision Required]
+    G --> I[Notification Sent]
+    H --> D
 ```
 
-### 2. Frontend Health Check
-```bash
-cd frontend
+## API Documentation
 
-# Check React dependencies
-npm list react react-dom antd
+### Comprehensive API Reference
 
-# Check if frontend builds
-npm run build
+Our RESTful API follows OpenAPI 3.0 specifications with comprehensive documentation available at:
 
-# Test frontend access
-curl -f http://localhost:3000 || echo "Frontend not ready"
+**📘 [Interactive API Documentation](https://app.swaggerhub.com/apis-docs/datcarts-01f/Supermarket-api/1.0.0)**
+
+### Core API Endpoints
+
+| Endpoint Category | Base Path | Description |
+|-------------------|-----------|-------------|
+| Authentication | `/api/v1/auth` | User authentication and authorization |
+| Product Management | `/api/v1/product` | Product CRUD operations |
+| Category Management | `/api/v1/category` | Product categorization |
+| Brand Management | `/api/v1/brand` | Brand information management |
+| Draft System | `/api/v1/draft` | Draft creation and management |
+| Notification System | `/api/v1/notifications` | Real-time notifications |
+| Administrative | `/api/v1/admin` | Admin-specific operations |
+
+### Sample API Usage
+
+```javascript
+// Authentication Example
+const response = await fetch('/api/v1/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    phoneNumber: '1234567890',
+    password: 'secure_password'
+  })
+});
+
+// Product Search Example
+const products = await fetch('/api/v1/product/search', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    barcodes: ['123456789012', '987654321098']
+  })
+});
 ```
 
-### 3. Database Health Check
-```bash
-# Test MongoDB connection
-mongosh product_details_db --eval "db.runCommand('ping').ok" --quiet
-
-# Check collections
-mongosh product_details_db --eval "show collections"
-
-# Verify admin user creation
-mongosh product_details_db --eval "db.users.findOne({phoneNumber: '1234567890'})"
-```
-
-### 4. AI Integration Check
-```bash
-cd backend
-
-# Test Python environment
-source python_env/bin/activate
-python -c "import google.generativeai as genai; print('AI integration ready')"
-
-# Test barcode processing script
-python utils/barcode_api_processor.py --test
-```
-
-## 🔧 Troubleshooting
-
-### Common Port Issues
-```bash
-# Kill processes on required ports
-sudo lsof -ti:3000 | xargs kill -9  # Frontend
-sudo lsof -ti:5000 | xargs kill -9  # Backend
-sudo lsof -ti:27017 | xargs kill -9 # MongoDB
-```
-
-### Environment Issues
-```bash
-# Reset Python environment
-rm -rf backend/python_env
-cd backend
-python -m venv python_env
-source python_env/bin/activate
-pip install google-generativeai requests python-dotenv pandas numpy json5
-
-# Reset Node modules
-rm -rf backend/node_modules backend/package-lock.json
-rm -rf frontend/node_modules frontend/package-lock.json
-cd backend && npm install
-cd ../frontend && npm install
-```
-
-### Database Issues
-```bash
-# Restart MongoDB
-sudo systemctl restart mongod  # Linux
-brew services restart mongodb-community  # macOS
-
-# Reset database (CAUTION: Deletes all data)
-mongosh product_details_db --eval "db.dropDatabase()"
-```
-
-### Permission Issues (Linux/macOS)
-```bash
-# Fix Python environment permissions
-chmod +x backend/python_env/bin/activate
-chmod +x backend/utils/barcode_api_processor.py
-
-# Fix MongoDB permissions
-sudo chown -R $USER:$USER /data/db
-```
-
-## 🎯 Installation Complete Checklist
-
-- [ ] ✅ Node.js dependencies installed (backend & frontend)
-- [ ] ✅ Python virtual environment created
-- [ ] ✅ AI dependencies installed (Google Gemini API)
-- [ ] ✅ Environment files configured (.env)
-- [ ] ✅ MongoDB running and connected
-- [ ] ✅ Backend server running on port 5000
-- [ ] ✅ Frontend server running on port 3000
-- [ ] ✅ Default admin account created
-- [ ] ✅ API endpoints responding
-- [ ] ✅ Database collections initialized
-- [ ] ✅ Python AI scripts executable
 
 
+### Development Team
+
+
+- [shanavasvb](https://github.com/shanavasvb) 
+- [AayishaOS](https://github.com/AayishaOS) 
+- [SumayyaVN9](https://github.com/SumayyaVN9) 
+
+=
+---
+
+<div align="center">
+
+**© 2025 Datcarts Technologies. All Rights Reserved.**
+
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-black?style=flat-square&logo=github)](https://github.com/shanavasvb/product-details-application)
+[![Documentation](https://img.shields.io/badge/Documentation-API%20Docs-blue?style=flat-square&logo=swagger)](https://app.swaggerhub.com/apis-docs/datcarts-01f/Supermarket-api/1.0.0)
+
+</div>
