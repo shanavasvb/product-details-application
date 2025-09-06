@@ -106,7 +106,7 @@ Our data model emphasizes flexibility, scalability, and referential integrity wi
 
 <div align="center">
 
-![Database ER Diagram](./images/er.png)
+![Database ER Diagram](./images/er.jpg)
 
 </div>
 
