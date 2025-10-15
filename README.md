@@ -398,7 +398,7 @@ This project is proprietary software owned by Datcarts . All rights reserved.
 ---
 
 <div align="center">    
-jks
+
 
 **© 2025 Datcarts Technologies. All Rights Reserved.**
 
